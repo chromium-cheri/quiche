@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be7a933d_d8c34d15",
+        "filename": "http2/decoder/decode_buffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000002
+      },
+      "writtenOn": "2018-12-08T03:57:42Z",
+      "side": 1,
+      "message": "Presumably, we should nuke this include at some point?",
+      "revId": "fd50a40b5f06e3a0f19923899137290ecdd43d39",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de",
+      "unresolved": true
+    }
+  ]
+}
