@@ -16,6 +16,24 @@
       "revId": "fd50a40b5f06e3a0f19923899137290ecdd43d39",
       "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89d3a3fc_ebc820d7",
+        "filename": "http2/decoder/decode_buffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000001
+      },
+      "writtenOn": "2018-12-08T04:00:05Z",
+      "side": 1,
+      "message": "Yeah, that would require some platform work.  I hoped to unify the platform and just use whatever we did for QUIC_LOG since redoing it many times is too much work.",
+      "parentUuid": "be7a933d_d8c34d15",
+      "revId": "fd50a40b5f06e3a0f19923899137290ecdd43d39",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de",
+      "unresolved": false
     }
   ]
 }
