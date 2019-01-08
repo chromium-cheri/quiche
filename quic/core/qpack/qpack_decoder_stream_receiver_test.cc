@@ -9,6 +9,7 @@
 #include "net/third_party/quiche/src/quic/platform/api/quic_test.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_text_utils.h"
 
+using testing::Eq;
 using testing::StrictMock;
 
 namespace quic {
@@ -47,7 +48,7 @@ TEST_F(QpackDecoderStreamReceiverTest, TableStateSynchronize) {
   EXPECT_CALL(delegate_, OnTableStateSynchronize(200));
   stream_.Decode(QuicTextUtils::HexDecode("3f8901"));
 
-  EXPECT_CALL(delegate_, OnErrorDetected("Encoded integer too large."));
+  EXPECT_CALL(delegate_, OnErrorDetected(Eq("Encoded integer too large.")));
   stream_.Decode(QuicTextUtils::HexDecode("3fffffffffffffffffffff"));
 }
 
@@ -64,7 +65,7 @@ TEST_F(QpackDecoderStreamReceiverTest, HeaderAcknowledgement) {
   EXPECT_CALL(delegate_, OnHeaderAcknowledgement(503));
   stream_.Decode(QuicTextUtils::HexDecode("fff802"));
 
-  EXPECT_CALL(delegate_, OnErrorDetected("Encoded integer too large."));
+  EXPECT_CALL(delegate_, OnErrorDetected(Eq("Encoded integer too large.")));
   stream_.Decode(QuicTextUtils::HexDecode("ffffffffffffffffffffff"));
 }
 
@@ -81,7 +82,7 @@ TEST_F(QpackDecoderStreamReceiverTest, StreamCancellation) {
   EXPECT_CALL(delegate_, OnStreamCancellation(110));
   stream_.Decode(QuicTextUtils::HexDecode("7f2f"));
 
-  EXPECT_CALL(delegate_, OnErrorDetected("Encoded integer too large."));
+  EXPECT_CALL(delegate_, OnErrorDetected(Eq("Encoded integer too large.")));
   stream_.Decode(QuicTextUtils::HexDecode("7fffffffffffffffffffff"));
 }
 
