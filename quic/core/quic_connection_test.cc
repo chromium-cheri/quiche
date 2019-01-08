@@ -592,7 +592,7 @@ class TestConnection : public QuicConnection {
                                          QuicStreamOffset offset,
                                          StreamSendingState state) {
     ScopedPacketFlusher flusher(this, NO_ACK);
-    producer_.SaveStreamData(id, iov, iov_count, 0u, offset, total_length);
+    producer_.SaveStreamData(id, iov, iov_count, 0u, total_length);
     if (notifier_ != nullptr) {
       return notifier_->WriteOrBufferData(id, total_length, state);
     }

@@ -21,11 +21,16 @@ class SimpleDataProducer : public QuicStreamFrameDataProducer {
   SimpleDataProducer();
   ~SimpleDataProducer() override;
 
+  // Saves data to be provided when WriteStreamData is called. Data of length
+  // |data_length| is buffered to be provided for stream |id|. Multiple calls to
+  // SaveStreamData for the same stream ID append to the buffer for that stream.
+  // The data to be buffered is provided in |iov_count| iovec structs, with
+  // |iov| pointing to the first, and |iov_offset| indicating how many bytes
+  // into the iovec structs the data starts.
   void SaveStreamData(QuicStreamId id,
                       const struct iovec* iov,
                       int iov_count,
                       size_t iov_offset,
-                      QuicStreamOffset offset,
                       QuicByteCount data_length);
 
   void SaveCryptoData(EncryptionLevel level,

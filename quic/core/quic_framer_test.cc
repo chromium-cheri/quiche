@@ -9571,7 +9571,7 @@ TEST_P(QuicFramerTest, StartsWithChlo) {
   iovec.iov_len = data.length();
   producer.SaveStreamData(
       QuicUtils::GetCryptoStreamId(framer_.transport_version()), &iovec, 1, 0,
-      0, data.length());
+      data.length());
   for (size_t offset = 0; offset < 5; ++offset) {
     if (offset == 0 || offset == 4) {
       EXPECT_TRUE(framer_.StartsWithChlo(
