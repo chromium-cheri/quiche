@@ -377,6 +377,13 @@ size_t QuicFramer::GetMinStreamFrameSize(QuicTransportVersion version,
 }
 
 // static
+size_t QuicFramer::GetMinCryptoFrameSize(QuicStreamOffset offset,
+                                         QuicPacketLength data_length) {
+  return kQuicFrameTypeSize + QuicDataWriter::GetVarInt62Len(offset) +
+         QuicDataWriter::GetVarInt62Len(data_length);
+}
+
+// static
 size_t QuicFramer::GetMessageFrameSize(QuicTransportVersion version,
                                        bool last_frame_in_packet,
                                        QuicByteCount length) {
@@ -869,7 +876,6 @@ size_t QuicFramer::BuildDataPacket(const QuicPacketHeader& header,
         set_detailed_error(
             "Attempt to append CRYPTO frame and not in version 99.");
         return RaiseError(QUIC_INTERNAL_ERROR);
-
       default:
         RaiseError(QUIC_INVALID_FRAME_DATA);
         QUIC_BUG << "QUIC_INVALID_FRAME_DATA";
@@ -3727,7 +3733,10 @@ size_t QuicFramer::ComputeFrameLength(
                  frame.stream_frame.offset, last_frame_in_packet,
                  frame.stream_frame.data_length) +
              frame.stream_frame.data_length;
-    // TODO(nharper): Add a case for CRYPTO_FRAME here?
+    case CRYPTO_FRAME:
+      return GetMinCryptoFrameSize(frame.crypto_frame->offset,
+                                   frame.crypto_frame->data_length) +
+             frame.crypto_frame->data_length;
     case ACK_FRAME: {
       return GetAckFrameSize(*frame.ack_frame, packet_number_length);
     }
@@ -4120,8 +4129,15 @@ bool QuicFramer::AppendCryptoFrame(const QuicCryptoFrame& frame,
     set_detailed_error("Writing data length failed.");
     return false;
   }
-  // TODO(nharper): Append stream frame contents.
-  return false;
+  if (data_producer_ == nullptr) {
+    QUIC_BUG << "No data producer for CRYPTO frame";
+    return false;
+  }
+  if (!data_producer_->WriteCryptoData(frame.level, frame.offset,
+                                       frame.data_length, writer)) {
+    return false;
+  }
+  return true;
 }
 
 void QuicFramer::set_version(const ParsedQuicVersion version) {

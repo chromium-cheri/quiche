@@ -270,6 +270,10 @@ class QUIC_EXPORT_PRIVATE QuicFramer {
                                       QuicStreamOffset offset,
                                       bool last_frame_in_packet,
                                       QuicPacketLength data_length);
+  // Returns the overhead of framing a CRYPTO frame with the specific offset and
+  // data length provided, but not counting the size of the data payload.
+  static size_t GetMinCryptoFrameSize(QuicStreamOffset offset,
+                                      QuicPacketLength data_length);
   static size_t GetMessageFrameSize(QuicTransportVersion version,
                                     bool last_frame_in_packet,
                                     QuicByteCount length);

@@ -1468,6 +1468,14 @@ WriteStreamDataResult QuicSession::WriteStreamData(QuicStreamId id,
   return WRITE_FAILED;
 }
 
+bool QuicSession::WriteCryptoData(EncryptionLevel level,
+                                  QuicStreamOffset offset,
+                                  QuicByteCount data_length,
+                                  QuicDataWriter* writer) {
+  QUIC_BUG << "QuicSession::WriteCryptoData is unimplemented";
+  return false;
+}
+
 QuicUint128 QuicSession::GetStatelessResetToken() const {
   if (!QuicConnectionIdSupportsVariableLength(perspective())) {
     return QuicConnectionIdToUInt64(connection_->connection_id());

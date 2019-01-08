@@ -28,19 +28,44 @@ class SimpleDataProducer : public QuicStreamFrameDataProducer {
                       QuicStreamOffset offset,
                       QuicByteCount data_length);
 
+  void SaveCryptoData(EncryptionLevel level,
+                      QuicStreamOffset offset,
+                      QuicStringPiece data);
+
   // QuicStreamFrameDataProducer
   WriteStreamDataResult WriteStreamData(QuicStreamId id,
                                         QuicStreamOffset offset,
                                         QuicByteCount data_length,
                                         QuicDataWriter* writer) override;
+  bool WriteCryptoData(EncryptionLevel level,
+                       QuicStreamOffset offset,
+                       QuicByteCount data_length,
+                       QuicDataWriter* writer) override;
 
  private:
   using SendBufferMap =
       QuicUnorderedMap<QuicStreamId, std::unique_ptr<QuicStreamSendBuffer>>;
+  using CryptoBufferMap =
+      QuicUnorderedMap<std::pair<EncryptionLevel, QuicStreamOffset>,
+                       QuicStringPiece>;
 
   SimpleBufferAllocator allocator_;
 
   SendBufferMap send_buffer_map_;
+
+  // |crypto_buffer_map_| stores data provided by SaveCryptoData to later write
+  // in WriteCryptoData. The level and data passed into SaveCryptoData are used
+  // as the key to identify the data when WriteCryptoData is called.
+  // WriteCryptoData will only succeed if there is data in the map for the
+  // provided level and offset, and the data in the map matches the data_length
+  // passed into WriteCryptoData.
+  //
+  // Unlike SaveStreamData/WriteStreamData which uses a map of
+  // QuicStreamSendBuffers (for each stream ID), this map provides data for
+  // specific offsets. Using a QuicStreamSendBuffer requires that all data
+  // before an offset exist, whereas this allows providing data that exists at
+  // arbitrary offsets for testing.
+  CryptoBufferMap crypto_buffer_map_;
 };
 
 }  // namespace test

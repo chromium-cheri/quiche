@@ -4,6 +4,8 @@
 
 #include "net/third_party/quiche/src/quic/test_tools/simple_data_producer.h"
 
+#include "net/third_party/quiche/src/quic/core/quic_data_writer.h"
+#include "net/third_party/quiche/src/quic/platform/api/quic_bug_tracker.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_flags.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_map_util.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_ptr_util.h"
@@ -13,6 +15,7 @@ namespace quic {
 namespace test {
 
 SimpleDataProducer::SimpleDataProducer() {}
+
 SimpleDataProducer::~SimpleDataProducer() {}
 
 void SimpleDataProducer::SaveStreamData(QuicStreamId id,
@@ -30,6 +33,13 @@ void SimpleDataProducer::SaveStreamData(QuicStreamId id,
   send_buffer_map_[id]->SaveStreamData(iov, iov_count, iov_offset, data_length);
 }
 
+void SimpleDataProducer::SaveCryptoData(EncryptionLevel level,
+                                        QuicStreamOffset offset,
+                                        QuicStringPiece data) {
+  auto key = std::make_pair(level, offset);
+  crypto_buffer_map_[key] = data;
+}
+
 WriteStreamDataResult SimpleDataProducer::WriteStreamData(
     QuicStreamId id,
     QuicStreamOffset offset,
@@ -43,6 +53,17 @@ WriteStreamDataResult SimpleDataProducer::WriteStreamData(
     return WRITE_SUCCESS;
   }
   return WRITE_FAILED;
+}
+
+bool SimpleDataProducer::WriteCryptoData(EncryptionLevel level,
+                                         QuicStreamOffset offset,
+                                         QuicByteCount data_length,
+                                         QuicDataWriter* writer) {
+  auto it = crypto_buffer_map_.find(std::make_pair(level, offset));
+  if (it == crypto_buffer_map_.end() || it->second.length() != data_length) {
+    return false;
+  }
+  return writer->WriteStringPiece(it->second);
 }
 
 }  // namespace test
