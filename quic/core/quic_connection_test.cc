@@ -17,6 +17,7 @@
 #include "net/third_party/quiche/src/quic/core/crypto/quic_encrypter.h"
 #include "net/third_party/quiche/src/quic/core/quic_packets.h"
 #include "net/third_party/quiche/src/quic/core/quic_simple_buffer_allocator.h"
+#include "net/third_party/quiche/src/quic/core/quic_types.h"
 #include "net/third_party/quiche/src/quic/core/quic_utils.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_expect_bug.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_flags.h"
@@ -288,6 +289,7 @@ class TestPacketWriter : public QuicPacketWriter {
         last_packet_size_(0),
         write_blocked_(false),
         write_should_fail_(false),
+        block_on_next_flush_(false),
         block_on_next_write_(false),
         next_packet_too_large_(false),
         always_get_packet_too_large_(false),
@@ -380,7 +382,16 @@ class TestPacketWriter : public QuicPacketWriter {
     return nullptr;
   }
 
-  WriteResult Flush() override { return WriteResult(WRITE_STATUS_OK, 0); }
+  WriteResult Flush() override {
+    if (block_on_next_flush_) {
+      block_on_next_flush_ = false;
+      SetWriteBlocked();
+      return WriteResult(WRITE_STATUS_BLOCKED, /*errno*/ -1);
+    }
+    return WriteResult(WRITE_STATUS_OK, 0);
+  }
+
+  void BlockOnNextFlush() { block_on_next_flush_ = true; }
 
   void BlockOnNextWrite() { block_on_next_write_ = true; }
 
@@ -500,6 +511,7 @@ class TestPacketWriter : public QuicPacketWriter {
   QuicPacketHeader last_packet_header_;
   bool write_blocked_;
   bool write_should_fail_;
+  bool block_on_next_flush_;
   bool block_on_next_write_;
   bool next_packet_too_large_;
   bool always_get_packet_too_large_;
@@ -3310,6 +3322,19 @@ TEST_P(QuicConnectionTest, DoNotAddToWriteBlockedListAfterDisconnect) {
 
     EXPECT_FALSE(connection_.connected());
     writer_->SetWriteBlocked();
+  }
+}
+
+TEST_P(QuicConnectionTest, AddToWriteBlockedListIfBlockedOnFlushPackets) {
+  writer_->SetBatchMode(true);
+  writer_->BlockOnNextFlush();
+
+  EXPECT_CALL(visitor_, OnWriteBlocked()).Times(1);
+  {
+    QuicConnection::ScopedPacketFlusher flusher(&connection_,
+                                                QuicConnection::NO_ACK);
+    // flusher's destructor will call connection_.FlushPackets, which should add
+    // the connection to the write blocked list.
   }
 }
 

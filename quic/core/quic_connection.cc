@@ -23,6 +23,7 @@
 #include "net/third_party/quiche/src/quic/core/quic_config.h"
 #include "net/third_party/quiche/src/quic/core/quic_packet_generator.h"
 #include "net/third_party/quiche/src/quic/core/quic_pending_retransmission.h"
+#include "net/third_party/quiche/src/quic/core/quic_types.h"
 #include "net/third_party/quiche/src/quic/core/quic_utils.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_bug_tracker.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_exported_stats.h"
@@ -2314,6 +2315,14 @@ void QuicConnection::FlushPackets() {
   }
 
   WriteResult result = writer_->Flush();
+
+  if (HandleWriteBlocked()) {
+    DCHECK_EQ(WRITE_STATUS_BLOCKED, result.status)
+        << "Unexpected flush result:" << result;
+    QUIC_DLOG(INFO) << ENDPOINT << "Write blocked in FlushPackets.";
+    return;
+  }
+
   if (IsWriteError(result.status)) {
     OnWriteError(result.error_code);
   }
