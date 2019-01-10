@@ -803,7 +803,7 @@ class QUIC_EXPORT_PRIVATE QuicConnection
     return ack_frequency_before_ack_decimation_;
   }
   void set_ack_frequency_before_ack_decimation(size_t new_value) {
-    DCHECK_GT(new_value, 0);
+    DCHECK_GT(new_value, 0u);
     ack_frequency_before_ack_decimation_ = new_value;
   }
 
@@ -836,11 +836,6 @@ class QUIC_EXPORT_PRIVATE QuicConnection
   // Attempts to process any queued undecryptable packets.
   void MaybeProcessUndecryptablePackets();
 
-  // Whether the handshake is confirmed from this connection's perspective.
-  bool IsHandshakeConfirmed() const {
-    return sent_packet_manager_.handshake_confirmed();
-  }
-
   enum PacketContent : uint8_t {
     NO_FRAMES_RECEIVED,
     // TODO(fkastenholz): Change name when we get rid of padded ping/
@@ -850,6 +845,11 @@ class QUIC_EXPORT_PRIVATE QuicConnection
     SECOND_FRAME_IS_PADDING,
     NOT_PADDED_PING,  // Set if the packet is not {PING, PADDING}.
   };
+
+  // Whether the handshake is confirmed from this connection's perspective.
+  bool IsHandshakeConfirmed() const {
+    return sent_packet_manager_.handshake_confirmed();
+  }
 
  protected:
   // Calls cancel() on all the alarms owned by this connection.

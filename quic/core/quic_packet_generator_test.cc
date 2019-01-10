@@ -829,7 +829,7 @@ TEST_F(QuicPacketGeneratorTest, PacketTransmissionType) {
   QuicConsumedData consumed =
       generator_.ConsumeData(stream1_id, &iov_, 1u, iov_.iov_len, 0, NO_FIN);
   EXPECT_EQ(data_len, consumed.bytes_consumed);
-  ASSERT_EQ(0, creator_->BytesFree())
+  ASSERT_EQ(0u, creator_->BytesFree())
       << "Test setup failed: Please increase data_len to "
       << data_len + creator_->BytesFree() << " bytes.";
 
@@ -846,9 +846,9 @@ TEST_F(QuicPacketGeneratorTest, PacketTransmissionType) {
   EXPECT_EQ(data_len, consumed.bytes_consumed);
 
   // Ensure the packet is successfully created.
-  ASSERT_EQ(1, packets_.size());
+  ASSERT_EQ(1u, packets_.size());
   ASSERT_TRUE(packets_[0].encrypted_buffer);
-  ASSERT_EQ(1, packets_[0].retransmittable_frames.size());
+  ASSERT_EQ(1u, packets_[0].retransmittable_frames.size());
   EXPECT_EQ(stream1_id,
             packets_[0].retransmittable_frames[0].stream_frame.stream_id);
   if (GetQuicReloadableFlag(quic_set_transmission_type_for_next_frame)) {

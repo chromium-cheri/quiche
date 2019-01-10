@@ -2465,7 +2465,8 @@ bool QuicFramer::ProcessIetfFrameData(QuicDataReader* reader,
     encoded_bytes -= reader->BytesRemaining();
 
     // Check that the frame type is minimally encoded.
-    if (encoded_bytes != QuicDataWriter::GetVarInt62Len(frame_type)) {
+    if (encoded_bytes !=
+        static_cast<size_t>(QuicDataWriter::GetVarInt62Len(frame_type))) {
       // The frame type was not minimally encoded.
       set_detailed_error("Frame type not minimally encoded.");
       return RaiseError(IETF_QUIC_PROTOCOL_VIOLATION);
