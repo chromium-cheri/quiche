@@ -4130,12 +4130,17 @@ bool QuicFramer::AppendCryptoFrame(const QuicCryptoFrame& frame,
     return false;
   }
   if (data_producer_ == nullptr) {
-    QUIC_BUG << "No data producer for CRYPTO frame";
-    return false;
-  }
-  if (!data_producer_->WriteCryptoData(frame.level, frame.offset,
-                                       frame.data_length, writer)) {
-    return false;
+    if (frame.data_buffer == nullptr ||
+        !writer->WriteBytes(frame.data_buffer, frame.data_length)) {
+      set_detailed_error("Writing frame data failed.");
+      return false;
+    }
+  } else {
+    DCHECK_EQ(nullptr, frame.data_buffer);
+    if (!data_producer_->WriteCryptoData(frame.level, frame.offset,
+                                         frame.data_length, writer)) {
+      return false;
+    }
   }
   return true;
 }
