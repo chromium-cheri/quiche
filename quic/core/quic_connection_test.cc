@@ -2276,7 +2276,8 @@ TEST_P(QuicConnectionTest, AckSentEveryNthPacket) {
 }
 
 TEST_P(QuicConnectionTest, AckDecimationReducesAcks) {
-  if (GetQuicReloadableFlag(quic_enable_ack_decimation)) {
+  if (GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+      !GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
     return;
   }
 
@@ -5375,7 +5376,8 @@ TEST_P(QuicConnectionTest, SendDelayedAckDecimationEighthRtt) {
 }
 
 TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithReordering) {
-  if (GetQuicReloadableFlag(quic_enable_ack_decimation)) {
+  if (GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+      !GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
     return;
   }
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame()).Times(AnyNumber());
@@ -5443,7 +5445,8 @@ TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithReordering) {
 }
 
 TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithLargeReordering) {
-  if (GetQuicReloadableFlag(quic_enable_ack_decimation)) {
+  if (GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+      !GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
     return;
   }
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame()).Times(AnyNumber());
@@ -5530,7 +5533,8 @@ TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithLargeReordering) {
 }
 
 TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithReorderingEighthRtt) {
-  if (GetQuicReloadableFlag(quic_enable_ack_decimation)) {
+  if (GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+      !GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
     return;
   }
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame()).Times(AnyNumber());
@@ -5602,7 +5606,8 @@ TEST_P(QuicConnectionTest, SendDelayedAckDecimationWithReorderingEighthRtt) {
 
 TEST_P(QuicConnectionTest,
        SendDelayedAckDecimationWithLargeReorderingEighthRtt) {
-  if (GetQuicReloadableFlag(quic_enable_ack_decimation)) {
+  if (GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+      !GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
     return;
   }
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame()).Times(AnyNumber());

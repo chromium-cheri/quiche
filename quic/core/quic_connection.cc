@@ -440,16 +440,24 @@ void QuicConnection::SetFromConfig(const QuicConfig& config) {
   if (config.HasClientSentConnectionOption(kACKD, perspective_)) {
     ack_mode_ = ACK_DECIMATION;
   }
-  if (!GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+  if ((!GetQuicReloadableFlag(quic_enable_ack_decimation) ||
+       GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) &&
       config.HasClientSentConnectionOption(kAKD2, perspective_)) {
+    if (GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
+      QUIC_RELOADABLE_FLAG_COUNT_N(quic_keep_ack_decimation_reordering, 1, 2);
+    }
     ack_mode_ = ACK_DECIMATION_WITH_REORDERING;
   }
   if (config.HasClientSentConnectionOption(kAKD3, perspective_)) {
     ack_mode_ = ACK_DECIMATION;
     ack_decimation_delay_ = kShortAckDecimationDelay;
   }
-  if (!GetQuicReloadableFlag(quic_enable_ack_decimation) &&
+  if ((!GetQuicReloadableFlag(quic_enable_ack_decimation) ||
+       GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) &&
       config.HasClientSentConnectionOption(kAKD4, perspective_)) {
+    if (GetQuicReloadableFlag(quic_keep_ack_decimation_reordering)) {
+      QUIC_RELOADABLE_FLAG_COUNT_N(quic_keep_ack_decimation_reordering, 2, 2);
+    }
     ack_mode_ = ACK_DECIMATION_WITH_REORDERING;
     ack_decimation_delay_ = kShortAckDecimationDelay;
   }
@@ -1496,7 +1504,8 @@ void QuicConnection::MaybeQueueAck(bool was_missing) {
     // If there are new missing packets to report, send an ack immediately.
     if (received_packet_manager_.HasNewMissingPackets()) {
       if (ack_mode_ == ACK_DECIMATION_WITH_REORDERING) {
-        DCHECK(!GetQuicReloadableFlag(quic_enable_ack_decimation));
+        DCHECK(!GetQuicReloadableFlag(quic_enable_ack_decimation) ||
+               GetQuicReloadableFlag(quic_keep_ack_decimation_reordering));
         // Wait the minimum of an eighth min_rtt and the existing ack time.
         QuicTime ack_time =
             clock_->ApproximateNow() +
