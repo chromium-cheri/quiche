@@ -1393,9 +1393,6 @@ class QUIC_EXPORT_PRIVATE QuicConnection
   // provided in constructor.
   const bool no_version_negotiation_;
 
-  // Latched value of quic_decrypt_packets_on_key_change flag.
-  const bool decrypt_packets_on_key_change_;
-
   // Payload of most recently transmitted QUIC_VERSION_99 connectivity
   // probe packet (the PATH_CHALLENGE payload). This implementation transmits
   // only one PATH_CHALLENGE per connectivity probe, so only one

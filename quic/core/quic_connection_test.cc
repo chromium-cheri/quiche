@@ -3641,45 +3641,6 @@ TEST_P(QuicConnectionTest, BufferNonDecryptablePackets) {
   ProcessDataPacketAtLevel(3, !kHasStopWaiting, ENCRYPTION_INITIAL);
 }
 
-TEST_P(QuicConnectionTest, Buffer100NonDecryptablePackets) {
-  if (GetQuicReloadableFlag(quic_decrypt_packets_on_key_change)) {
-    return;
-  }
-
-  // SetFromConfig is always called after construction from InitializeSession.
-  EXPECT_CALL(*send_algorithm_, SetFromConfig(_, _));
-  QuicConfig config;
-  config.set_max_undecryptable_packets(100);
-  connection_.SetFromConfig(config);
-  EXPECT_CALL(visitor_, OnSuccessfulVersionNegotiation(_));
-  use_tagging_decrypter();
-
-  const uint8_t tag = 0x07;
-  peer_framer_.SetEncrypter(ENCRYPTION_INITIAL,
-                            QuicMakeUnique<TaggingEncrypter>(tag));
-
-  // Process an encrypted packet which can not yet be decrypted which should
-  // result in the packet being buffered.
-  for (QuicPacketNumber i = 1; i <= 100; ++i) {
-    ProcessDataPacketAtLevel(i, !kHasStopWaiting, ENCRYPTION_INITIAL);
-  }
-
-  // Transition to the new encryption state and process another encrypted packet
-  // which should result in the original packets being processed.
-  connection_.SetDecrypter(ENCRYPTION_INITIAL,
-                           QuicMakeUnique<StrictTaggingDecrypter>(tag));
-  connection_.SetDefaultEncryptionLevel(ENCRYPTION_INITIAL);
-  connection_.SetEncrypter(ENCRYPTION_INITIAL,
-                           QuicMakeUnique<TaggingEncrypter>(tag));
-  EXPECT_CALL(visitor_, OnStreamFrame(_)).Times(101);
-  ProcessDataPacketAtLevel(101, !kHasStopWaiting, ENCRYPTION_INITIAL);
-
-  // Finally, process a third packet and note that we do not reprocess the
-  // buffered packet.
-  EXPECT_CALL(visitor_, OnStreamFrame(_)).Times(1);
-  ProcessDataPacketAtLevel(102, !kHasStopWaiting, ENCRYPTION_INITIAL);
-}
-
 TEST_P(QuicConnectionTest, TestRetransmitOrder) {
   connection_.SetMaxTailLossProbes(0);
 
@@ -3713,10 +3674,6 @@ TEST_P(QuicConnectionTest, TestRetransmitOrder) {
 }
 
 TEST_P(QuicConnectionTest, Buffer100NonDecryptablePacketsThenKeyChange) {
-  if (!GetQuicReloadableFlag(quic_decrypt_packets_on_key_change)) {
-    return;
-  }
-
   // SetFromConfig is always called after construction from InitializeSession.
   EXPECT_CALL(*send_algorithm_, SetFromConfig(_, _));
   QuicConfig config;

@@ -346,9 +346,7 @@ QuicConnection::QuicConnection(
       supports_release_time_(false),
       release_time_into_future_(QuicTime::Delta::Zero()),
       donot_retransmit_old_window_updates_(false),
-      no_version_negotiation_(supported_versions.size() == 1),
-      decrypt_packets_on_key_change_(
-          GetQuicReloadableFlag(quic_decrypt_packets_on_key_change)) {
+      no_version_negotiation_(supported_versions.size() == 1) {
   if (ack_mode_ == ACK_DECIMATION) {
     QUIC_RELOADABLE_FLAG_COUNT(quic_enable_ack_decimation);
   }
@@ -2578,11 +2576,7 @@ void QuicConnection::SetDefaultEncryptionLevel(EncryptionLevel level) {
 void QuicConnection::SetDecrypter(EncryptionLevel level,
                                   std::unique_ptr<QuicDecrypter> decrypter) {
   framer_.SetDecrypter(level, std::move(decrypter));
-  if (!decrypt_packets_on_key_change_) {
-    return;
-  }
 
-  QUIC_RELOADABLE_FLAG_COUNT_N(quic_decrypt_packets_on_key_change, 1, 3);
   if (!undecryptable_packets_.empty() &&
       !process_undecryptable_packets_alarm_->IsSet()) {
     process_undecryptable_packets_alarm_->Set(clock_->ApproximateNow());
@@ -2594,11 +2588,7 @@ void QuicConnection::SetAlternativeDecrypter(
     std::unique_ptr<QuicDecrypter> decrypter,
     bool latch_once_used) {
   framer_.SetAlternativeDecrypter(level, std::move(decrypter), latch_once_used);
-  if (!decrypt_packets_on_key_change_) {
-    return;
-  }
 
-  QUIC_RELOADABLE_FLAG_COUNT_N(quic_decrypt_packets_on_key_change, 2, 3);
   if (!undecryptable_packets_.empty() &&
       !process_undecryptable_packets_alarm_->IsSet()) {
     process_undecryptable_packets_alarm_->Set(clock_->ApproximateNow());
@@ -2620,10 +2610,7 @@ void QuicConnection::QueueUndecryptablePacket(
 }
 
 void QuicConnection::MaybeProcessUndecryptablePackets() {
-  if (decrypt_packets_on_key_change_) {
-    QUIC_RELOADABLE_FLAG_COUNT_N(quic_decrypt_packets_on_key_change, 3, 3);
-    process_undecryptable_packets_alarm_->Cancel();
-  }
+  process_undecryptable_packets_alarm_->Cancel();
 
   if (undecryptable_packets_.empty() || encryption_level_ == ENCRYPTION_NONE) {
     return;
