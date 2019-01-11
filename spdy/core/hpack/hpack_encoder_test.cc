@@ -7,11 +7,11 @@
 #include <cstdint>
 #include <map>
 
-#include "base/arena.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "third_party/absl/random/random.h"
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_huffman_table.h"
+#include "net/third_party/quiche/src/spdy/platform/api/spdy_unsafe_arena.h"
 #include "util/random/acmrandom.h"
 
 namespace spdy {
@@ -201,7 +201,7 @@ class HpackEncoderTest : public ::testing::TestWithParam<bool> {
   const HpackEntry* cookie_a_;
   const HpackEntry* cookie_c_;
 
-  UnsafeArena headers_storage_;
+  SpdyUnsafeArena headers_storage_;
   std::vector<std::pair<SpdyStringPiece, SpdyStringPiece>> headers_observed_;
 
   HpackOutputStream expected_;
