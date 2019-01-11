@@ -986,6 +986,9 @@ class SPDY_EXPORT_PRIVATE SpdySerializedFrame {
     return buffer;
   }
 
+  // Returns the estimate of dynamically allocated memory in bytes.
+  size_t EstimateMemoryUsage() const { return owns_buffer_ ? size_ : 0; }
+
  protected:
   char* frame_;
 

@@ -12,6 +12,7 @@
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_header_table.h"
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_huffman_table.h"
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_output_stream.h"
+#include "net/third_party/quiche/src/spdy/platform/api/spdy_estimate_memory_usage.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_ptr_util.h"
 
 namespace spdy {
@@ -121,6 +122,12 @@ void HpackEncoder::ApplyHeaderTableSizeSetting(size_t size_setting) {
   }
   header_table_.SetSettingsHeaderTableSize(size_setting);
   should_emit_table_size_ = true;
+}
+
+size_t HpackEncoder::EstimateMemoryUsage() const {
+  // |huffman_table_| is a singleton. It's accounted for in spdy_session_pool.cc
+  return SpdyEstimateMemoryUsage(header_table_) +
+         SpdyEstimateMemoryUsage(output_stream_);
 }
 
 void HpackEncoder::EncodeRepresentations(RepresentationIterator* iter,

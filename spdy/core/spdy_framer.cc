@@ -22,6 +22,7 @@
 #include "net/third_party/quiche/src/spdy/core/spdy_bug_tracker.h"
 #include "net/third_party/quiche/src/spdy/core/spdy_frame_builder.h"
 #include "net/third_party/quiche/src/spdy/core/spdy_frame_reader.h"
+#include "net/third_party/quiche/src/spdy/platform/api/spdy_estimate_memory_usage.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_ptr_util.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_string_utils.h"
 #include "util/gtl/lazy_static_ptr.h"
@@ -1291,6 +1292,10 @@ size_t SpdyFramer::header_encoder_table_size() const {
 void SpdyFramer::SetEncoderHeaderTableDebugVisitor(
     std::unique_ptr<HpackHeaderTable::DebugVisitorInterface> visitor) {
   GetHpackEncoder()->SetHeaderTableDebugVisitor(std::move(visitor));
+}
+
+size_t SpdyFramer::EstimateMemoryUsage() const {
+  return SpdyEstimateMemoryUsage(hpack_encoder_);
 }
 
 }  // namespace spdy

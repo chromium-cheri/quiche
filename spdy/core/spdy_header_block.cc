@@ -90,6 +90,11 @@ class SpdyHeaderBlock::Storage {
 
   size_t bytes_allocated() const { return arena_.status().bytes_allocated(); }
 
+  // TODO(xunjieli): https://crbug.com/669108. Merge this with bytes_allocated()
+  size_t EstimateMemoryUsage() const {
+    return arena_.status().bytes_allocated();
+  }
+
  private:
   SpdyUnsafeArena arena_;
 };

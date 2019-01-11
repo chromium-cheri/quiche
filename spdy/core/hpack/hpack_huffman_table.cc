@@ -10,6 +10,7 @@
 
 #include "base/logging.h"
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_output_stream.h"
+#include "net/third_party/quiche/src/spdy/platform/api/spdy_estimate_memory_usage.h"
 
 namespace spdy {
 
@@ -138,6 +139,11 @@ size_t HpackHuffmanTable::EncodedSize(SpdyStringPiece in) const {
     bit_count += 8 - bit_count % 8;
   }
   return bit_count / 8;
+}
+
+size_t HpackHuffmanTable::EstimateMemoryUsage() const {
+  return SpdyEstimateMemoryUsage(code_by_id_) +
+         SpdyEstimateMemoryUsage(length_by_id_);
 }
 
 }  // namespace spdy
