@@ -8,14 +8,10 @@
 
 #include <algorithm>
 #include <limits>
-#include <memory>
-#include <utility>
 
-#include "base/log_severity.h"
 #include "base/logging.h"
-#include "strings/cord.h"
-#include "testing/base/public/googletest.h"  // for FLAGS_test_random_seed
 #include "testing/gtest/include/gtest/gtest.h"
+#include "net/third_party/quiche/src/http2/test_tools/http2_random.h"
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_constants.h"
 #include "net/third_party/quiche/src/spdy/core/mock_spdy_framer_visitor.h"
 #include "net/third_party/quiche/src/spdy/core/spdy_frame_builder.h"
@@ -25,7 +21,6 @@
 #include "net/third_party/quiche/src/spdy/core/spdy_protocol_test_utils.h"
 #include "net/third_party/quiche/src/spdy/core/spdy_test_utils.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_ptr_util.h"
-#include "util/random/mt_random.h"
 
 namespace spdy {
 namespace test {
@@ -33,11 +28,7 @@ namespace {
 
 class SpdyDeframerVisitorTest : public ::testing::Test {
  protected:
-  SpdyDeframerVisitorTest()
-      : encoder_(SpdyFramer::ENABLE_COMPRESSION),
-        random_(FLAGS_test_random_seed) {
-    DLOG(INFO) << "Random seed (--test_random_seed): "
-               << FLAGS_test_random_seed;
+  SpdyDeframerVisitorTest() : encoder_(SpdyFramer::ENABLE_COMPRESSION) {
     decoder_.set_process_single_input_frame(true);
     auto collector =
         SpdyMakeUnique<DeframerCallbackCollector>(&collected_frames_);
@@ -77,7 +68,7 @@ class SpdyDeframerVisitorTest : public ::testing::Test {
   std::unique_ptr<SpdyTestDeframer> deframer_;
 
  private:
-  MTRandom random_;
+  http2::test::Http2Random random_;
 };
 
 TEST_F(SpdyDeframerVisitorTest, DataFrame) {
