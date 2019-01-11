@@ -88,10 +88,6 @@ void QuicSession::Initialize() {
   connection_->SetDataProducer(this);
   connection_->SetFromConfig(config_);
 
-  // Make sure connection and control frame manager latch the same flag values.
-  connection_->set_donot_retransmit_old_window_updates(
-      control_frame_manager_.donot_retransmit_old_window_updates());
-
   DCHECK_EQ(QuicUtils::GetCryptoStreamId(connection_->transport_version()),
             GetMutableCryptoStream()->id());
   RegisterStaticStream(

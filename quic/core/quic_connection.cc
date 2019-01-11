@@ -345,7 +345,6 @@ QuicConnection::QuicConnection(
       processing_ack_frame_(false),
       supports_release_time_(false),
       release_time_into_future_(QuicTime::Delta::Zero()),
-      donot_retransmit_old_window_updates_(false),
       no_version_negotiation_(supported_versions.size() == 1) {
   if (ack_mode_ == ACK_DECIMATION) {
     QUIC_RELOADABLE_FLAG_COUNT(quic_enable_ack_decimation);
@@ -2512,8 +2511,7 @@ void QuicConnection::SendAck() {
   }
   consecutive_num_packets_with_no_retransmittable_frames_ = 0;
   if (packet_generator_.HasRetransmittableFrames() ||
-      (donot_retransmit_old_window_updates_ &&
-       visitor_->WillingAndAbleToWrite())) {
+      visitor_->WillingAndAbleToWrite()) {
     // There are pending retransmittable frames.
     return;
   }
