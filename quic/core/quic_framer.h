@@ -877,9 +877,6 @@ class QUIC_EXPORT_PRIVATE QuicFramer {
   // owned. TODO(fayang): Consider add data producer to framer's constructor.
   QuicStreamFrameDataProducer* data_producer_;
 
-  // Latched value of quic_process_stateless_reset_at_client_only flag.
-  const bool process_stateless_reset_at_client_only_;
-
   // If true, framer infers packet header type (IETF/GQUIC) from version_.
   // Otherwise, framer infers packet header type from first byte of a received
   // packet.
