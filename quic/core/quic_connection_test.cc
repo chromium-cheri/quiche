@@ -338,7 +338,10 @@ class TestPacketWriter : public QuicPacketWriter {
       return WriteResult(WRITE_STATUS_ERROR, EMSGSIZE);
     }
     if (IsWriteBlocked()) {
-      return WriteResult(WRITE_STATUS_BLOCKED, EAGAIN);
+      return WriteResult(is_write_blocked_data_buffered_
+                             ? WRITE_STATUS_BLOCKED_DATA_BUFFERED
+                             : WRITE_STATUS_BLOCKED,
+                         EAGAIN);
     }
 
     if (ShouldWriteFail()) {
