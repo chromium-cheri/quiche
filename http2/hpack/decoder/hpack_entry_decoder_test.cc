@@ -157,8 +157,9 @@ class HpackLiteralEntryDecoderTest
   const HpackEntryType entry_type_;
 };
 
-INSTANTIATE_TEST_SUITE_P(
-    AllLiteralTypes, HpackLiteralEntryDecoderTest,
+INSTANTIATE_TEST_CASE_P(
+    AllLiteralTypes,
+    HpackLiteralEntryDecoderTest,
     testing::Values(HpackEntryType::kIndexedLiteralHeader,
                     HpackEntryType::kUnindexedLiteralHeader,
                     HpackEntryType::kNeverIndexedLiteralHeader));
