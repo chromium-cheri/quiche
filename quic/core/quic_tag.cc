@@ -23,7 +23,7 @@ bool FindMutualQuicTag(const QuicTagVector& our_tags,
       if (our_tags[i] == their_tags[j]) {
         *out_result = our_tags[i];
         if (out_index != nullptr) {
-          *out_index = j;
+          *out_index = i;
         }
         return true;
       }
