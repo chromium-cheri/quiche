@@ -95,7 +95,7 @@ enum WriteStatus {
 
 std::string HistogramEnumString(WriteStatus enum_value);
 
-inline std::string HistogramEnumDescription(WriteStatus dummy) {
+inline std::string HistogramEnumDescription(WriteStatus /*dummy*/) {
   return "status";
 }
 
@@ -254,8 +254,7 @@ enum QuicIetfFrameType : uint8_t {
   IETF_PATH_RESPONSE = 0x1b,
   // Both of the following are "Connection Close" frames,
   // the first signals transport-layer errors, the second application-layer
-  // errors.The frame formats and protocol procedures are the same, the only
-  // difference is the number space in the frame's error code field.
+  // errors.
   IETF_CONNECTION_CLOSE = 0x1c,
   IETF_APPLICATION_CLOSE = 0x1d,
 
@@ -586,6 +585,20 @@ enum PacketNumberSpace : uint8_t {
 };
 
 enum AckMode { TCP_ACKING, ACK_DECIMATION, ACK_DECIMATION_WITH_REORDERING };
+
+// Used to return the result of processing a received ACK frame.
+enum AckResult {
+  PACKETS_NEWLY_ACKED,
+  NO_PACKETS_NEWLY_ACKED,
+  UNSENT_PACKETS_ACKED,     // Peer acks unsent packets.
+  UNACKABLE_PACKETS_ACKED,  // Peer acks packets that are not expected to be
+                            // acked. For example, encryption is reestablished,
+                            // and all sent encrypted packets cannot be
+                            // decrypted by the peer. Version gets negotiated,
+                            // and all sent packets in the different version
+                            // cannot be processed by the peer.
+  PACKETS_ACKED_IN_WRONG_PACKET_NUMBER_SPACE,
+};
 
 }  // namespace quic
 

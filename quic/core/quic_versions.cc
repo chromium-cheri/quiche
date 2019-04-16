@@ -391,7 +391,7 @@ std::string AlpnForVersion(ParsedQuicVersion parsed_version) {
 
 void QuicVersionInitializeSupportForIetfDraft(int32_t draft_version) {
   if (draft_version < 0 || draft_version >= 256) {
-    LOG(FATAL) << "Invalid IETF draft version " << draft_version;
+    QUIC_LOG(FATAL) << "Invalid IETF draft version " << draft_version;
     return;
   }
 
@@ -408,6 +408,7 @@ void QuicVersionInitializeSupportForIetfDraft(int32_t draft_version) {
   SetQuicReloadableFlag(quic_use_uber_loss_algorithm, true);
   SetQuicReloadableFlag(quic_use_uber_received_packet_manager, true);
   SetQuicReloadableFlag(quic_validate_packet_number_post_decryption, true);
+  SetQuicReloadableFlag(quic_print_tag_hex, true);
   SetQuicRestartFlag(quic_enable_accept_random_ipn, true);
 }
 
