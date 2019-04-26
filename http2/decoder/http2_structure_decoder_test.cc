@@ -22,7 +22,7 @@
 
 #include <cstdint>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/http2/decoder/decode_buffer.h"
 #include "net/third_party/quiche/src/http2/decoder/decode_status.h"
 #include "net/third_party/quiche/src/http2/http2_constants.h"

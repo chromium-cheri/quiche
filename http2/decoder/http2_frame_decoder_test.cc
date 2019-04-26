@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/http2/http2_constants.h"
 #include "net/third_party/quiche/src/http2/platform/api/http2_logging.h"
 #include "net/third_party/quiche/src/http2/platform/api/http2_reconstruct_object.h"

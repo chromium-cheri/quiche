@@ -5,7 +5,7 @@
 // an AssertionResult if the condition is not satisfied.
 #include "net/http2/platform/impl/http2_test_helpers_impl.h"
 
-#include "testing/gtest/include/gtest/gtest.h"  // For AssertionSuccess
+#include "testing/base/public/gunit.h"  // For AssertionSuccess
 
 #define VERIFY_AND_RETURN_SUCCESS(expression) \
   {                                           \

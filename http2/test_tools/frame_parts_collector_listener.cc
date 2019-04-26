@@ -4,7 +4,7 @@
 
 #include "net/third_party/quiche/src/http2/test_tools/frame_parts_collector_listener.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/http2/platform/api/http2_logging.h"
 
 namespace http2 {

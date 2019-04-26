@@ -4,7 +4,7 @@
 
 #include "net/third_party/quiche/src/http2/hpack/decoder/hpack_entry_collector.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/http2/hpack/decoder/hpack_string_collector.h"
 #include "net/third_party/quiche/src/http2/hpack/http2_hpack_constants.h"
 #include "net/third_party/quiche/src/http2/platform/api/http2_logging.h"

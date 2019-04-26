@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_string_piece.h"
 
 namespace spdy {

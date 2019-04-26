@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_endianness_util.h"
 #include "net/third_party/quiche/src/spdy/platform/api/spdy_logging.h"
 

@@ -4,7 +4,7 @@
 
 #include "net/third_party/quiche/src/spdy/core/hpack/hpack_entry.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 
 namespace spdy {
 

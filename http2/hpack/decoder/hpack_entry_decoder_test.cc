@@ -8,7 +8,7 @@
 
 #include <cstdint>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/http2/hpack/decoder/hpack_entry_collector.h"
 #include "net/third_party/quiche/src/http2/hpack/tools/hpack_block_builder.h"
 #include "net/third_party/quiche/src/http2/platform/api/http2_test_helpers.h"

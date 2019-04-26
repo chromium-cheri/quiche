@@ -7,8 +7,8 @@
 #include <memory>
 #include <utility>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gmock.h"
+#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/spdy/core/spdy_test_utils.h"
 
 using ::testing::ElementsAre;

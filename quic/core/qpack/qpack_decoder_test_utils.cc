@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/base/public/gmock.h"
 
 namespace quic {
 namespace test {

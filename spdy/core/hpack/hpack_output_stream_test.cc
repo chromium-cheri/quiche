@@ -6,7 +6,7 @@
 
 #include <cstddef>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "testing/base/public/gunit.h"
 
 namespace spdy {
 

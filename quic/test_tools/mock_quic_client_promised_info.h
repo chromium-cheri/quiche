@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/base/public/gmock.h"
 #include "net/third_party/quiche/src/quic/core/http/quic_client_promised_info.h"
 #include "net/third_party/quiche/src/quic/core/quic_packets.h"
 
