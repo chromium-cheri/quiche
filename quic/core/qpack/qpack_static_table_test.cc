@@ -6,9 +6,9 @@
 
 #include <set>
 
-#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_arraysize.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_string_piece.h"
+#include "net/third_party/quiche/src/quic/platform/api/quic_test.h"
 
 namespace quic {
 

@@ -5,7 +5,6 @@
 #include <string>
 #include <tuple>
 
-#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/quic/core/qpack/qpack_decoder_test_utils.h"
 #include "net/third_party/quiche/src/quic/core/qpack/qpack_encoder_test_utils.h"
 #include "net/third_party/quiche/src/quic/core/qpack/qpack_test_utils.h"

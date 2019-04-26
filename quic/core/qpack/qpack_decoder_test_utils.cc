@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "testing/base/public/gmock.h"
+#include "net/third_party/quiche/src/quic/platform/api/quic_test.h"
 
 namespace quic {
 namespace test {

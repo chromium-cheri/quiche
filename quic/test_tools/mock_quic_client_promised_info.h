@@ -7,9 +7,9 @@
 
 #include <string>
 
-#include "testing/base/public/gmock.h"
 #include "net/third_party/quiche/src/quic/core/http/quic_client_promised_info.h"
 #include "net/third_party/quiche/src/quic/core/quic_packets.h"
+#include "net/third_party/quiche/src/quic/platform/api/quic_test.h"
 
 namespace quic {
 namespace test {

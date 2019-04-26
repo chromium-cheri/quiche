@@ -4,8 +4,6 @@
 
 #include "net/third_party/quiche/src/quic/core/qpack/qpack_instruction_encoder.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/quic/core/qpack/qpack_test_utils.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_logging.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_test.h"

@@ -4,8 +4,6 @@
 
 #include "net/third_party/quiche/src/quic/quartc/quartc_interval_counter.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/quic/core/quic_interval.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_test.h"
 

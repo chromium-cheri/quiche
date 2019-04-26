@@ -4,8 +4,6 @@
 
 #include "net/third_party/quiche/src/quic/quartc/quartc_session.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
 #include "net/third_party/quiche/src/quic/core/quic_simple_buffer_allocator.h"
 #include "net/third_party/quiche/src/quic/core/quic_types.h"
 #include "net/third_party/quiche/src/quic/core/tls_client_handshaker.h"
