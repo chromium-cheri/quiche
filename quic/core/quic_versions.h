@@ -147,6 +147,11 @@ struct QUIC_EXPORT_PRIVATE ParsedQuicVersion {
   }
 
   bool KnowsWhichDecrypterToUse() const;
+
+  // Returns whether header protection is used in this version of QUIC.
+  inline bool HasHeaderProtection() const {
+    return transport_version == QUIC_VERSION_99;
+  }
 };
 
 QUIC_EXPORT_PRIVATE ParsedQuicVersion UnsupportedQuicVersion();
