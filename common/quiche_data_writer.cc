@@ -5,6 +5,7 @@
 #include "net/third_party/quiche/src/common/quiche_data_writer.h"
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 
 #include "net/third_party/quiche/src/common/platform/api/quiche_endian.h"
