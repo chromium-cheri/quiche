@@ -473,6 +473,11 @@ class QUIC_EXPORT_PRIVATE QuicSpdySession
   // Send a MAX_PUSH_ID frame.  Used in IETF QUIC only.
   void SendMaxPushId();
 
+  // Informs the QuicCryptoStream of the SETTINGS that will be used on this
+  // connection, so that the server crypto stream knows whether to accept 0-RTT
+  // data.
+  void SendSettingsToCryptoStream();
+
   std::unique_ptr<QpackEncoder> qpack_encoder_;
   std::unique_ptr<QpackDecoder> qpack_decoder_;
 

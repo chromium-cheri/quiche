@@ -462,6 +462,7 @@ void QuicSpdySession::Initialize() {
   // Limit HPACK buffering to 2x header list size limit.
   h2_deframer_.GetHpackDecoder()->set_max_decode_buffer_size_bytes(
       2 * max_inbound_header_list_size_);
+  SendSettingsToCryptoStream();
 }
 
 void QuicSpdySession::OnDecoderStreamError(
@@ -741,6 +742,29 @@ void QuicSpdySession::SendInitialData() {
     SendMaxPushId();
     http3_max_push_id_sent_ = true;
   }
+}
+
+void QuicSpdySession::SendSettingsToCryptoStream() {
+  if (perspective() != Perspective::IS_SERVER) {
+    return;
+  }
+
+  SettingsFrame settings;
+  settings.values[SETTINGS_QPACK_MAX_TABLE_CAPACITY] =
+      qpack_maximum_dynamic_table_capacity_;
+  settings.values[SETTINGS_QPACK_BLOCKED_STREAMS] =
+      qpack_maximum_blocked_streams_;
+  settings.values[SETTINGS_MAX_HEADER_LIST_SIZE] =
+      max_inbound_header_list_size_;
+  std::unique_ptr<char[]> buffer;
+  QuicByteCount buffer_size =
+      HttpEncoder::SerializeSettingsFrame(settings, &buffer);
+
+  std::unique_ptr<ApplicationState> serialized_settings =
+      std::make_unique<ApplicationState>(buffer.get(),
+                                         buffer.get() + buffer_size);
+  GetMutableCryptoStream()->SetServerApplicationStateForResumption(
+      std::move(serialized_settings));
 }
 
 QpackEncoder* QuicSpdySession::qpack_encoder() {
