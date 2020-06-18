@@ -10,8 +10,8 @@
 #include <string>
 #include <utility>
 
-#include "third_party/boringssl/src/include/openssl/sha.h"
-#include "third_party/boringssl/src/include/openssl/ssl.h"
+#include "net/third_party/quiche/src/common/platform/api/quiche_string_piece.h"
+#include "net/third_party/quiche/src/common/platform/api/quiche_text_utils.h"
 #include "net/third_party/quiche/src/quic/core/crypto/aes_128_gcm_12_decrypter.h"
 #include "net/third_party/quiche/src/quic/core/crypto/aes_128_gcm_12_encrypter.h"
 #include "net/third_party/quiche/src/quic/core/crypto/cert_compressor.h"
@@ -47,8 +47,8 @@
 #include "net/third_party/quiche/src/quic/platform/api/quic_logging.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_reference_counted.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_socket_address.h"
-#include "net/third_party/quiche/src/common/platform/api/quiche_string_piece.h"
-#include "net/third_party/quiche/src/common/platform/api/quiche_text_utils.h"
+#include "third_party/boringssl/src/include/openssl/sha.h"
+#include "third_party/boringssl/src/include/openssl/ssl.h"
 
 namespace quic {
 
@@ -553,7 +553,7 @@ void QuicCryptoServerConfig::ValidateClientHello(
     signed_config->proof.signature = "";
     signed_config->proof.leaf_cert_scts = "";
     EvaluateClientHello(server_address, client_address, version, configs,
-                        result, std::move(done_cb));
+                        signed_config, result, std::move(done_cb));
   } else {
     done_cb->Run(result, /* details = */ nullptr);
   }
@@ -1203,6 +1203,7 @@ void QuicCryptoServerConfig::EvaluateClientHello(
     const QuicSocketAddress& client_address,
     QuicTransportVersion /*version*/,
     const Configs& configs,
+    QuicReferenceCountedPointer<QuicSignedServerConfig> signed_config,
     QuicReferenceCountedPointer<ValidateClientHelloResultCallback::Result>
         client_hello_state,
     std::unique_ptr<ValidateClientHelloResultCallback> done_cb) const {
@@ -1282,6 +1283,8 @@ void QuicCryptoServerConfig::EvaluateClientHello(
   } else if (!ValidateExpectedLeafCertificate(client_hello, chain->certs)) {
     info->reject_reasons.push_back(INVALID_EXPECTED_LEAF_CERTIFICATE);
   }
+
+  signed_config->chain = chain;
 
   if (info->client_nonce.size() != kNonceSize) {
     info->reject_reasons.push_back(CLIENT_NONCE_INVALID_FAILURE);

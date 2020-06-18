@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "third_party/boringssl/src/include/openssl/base.h"
+#include "net/third_party/quiche/src/common/platform/api/quiche_string_piece.h"
 #include "net/third_party/quiche/src/quic/core/crypto/crypto_handshake.h"
 #include "net/third_party/quiche/src/quic/core/crypto/crypto_handshake_message.h"
 #include "net/third_party/quiche/src/quic/core/crypto/crypto_protocol.h"
@@ -30,7 +30,7 @@
 #include "net/third_party/quiche/src/quic/platform/api/quic_mutex.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_reference_counted.h"
 #include "net/third_party/quiche/src/quic/platform/api/quic_socket_address.h"
-#include "net/third_party/quiche/src/common/platform/api/quiche_string_piece.h"
+#include "third_party/boringssl/src/include/openssl/base.h"
 
 namespace quic {
 
@@ -556,6 +556,7 @@ class QUIC_EXPORT_PRIVATE QuicCryptoServerConfig {
       const QuicSocketAddress& client_address,
       QuicTransportVersion version,
       const Configs& configs,
+      QuicReferenceCountedPointer<QuicSignedServerConfig> signed_config,
       QuicReferenceCountedPointer<ValidateClientHelloResultCallback::Result>
           client_hello_state,
       std::unique_ptr<ValidateClientHelloResultCallback> done_cb) const;
