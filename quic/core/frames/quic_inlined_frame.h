@@ -17,8 +17,15 @@ namespace quic {
 template <typename DerivedT>
 struct QUIC_EXPORT_PRIVATE QuicInlinedFrame {
   QuicInlinedFrame(QuicFrameType type) : type(type) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
     static_assert(offsetof(DerivedT, type) == 0,
                   "type must be the first field.");
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
     static_assert(sizeof(DerivedT) <= 24,
                   "Frames larger than 24 bytes should not be inlined.");
   }
