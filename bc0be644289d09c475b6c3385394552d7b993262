@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "05286aac_ec47e4bb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000515
+      },
+      "writtenOn": "2020-10-13T22:31:25Z",
+      "side": 1,
+      "message": "10560: Fix problem of duplicated signature when using PROTOCOL_QUIC_CRYPTO on server side. | https://quiche-review.googlesource.com/c/quiche/+/10560",
+      "revId": "bc0be644289d09c475b6c3385394552d7b993262",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
