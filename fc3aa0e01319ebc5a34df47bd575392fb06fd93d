@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "69f676ae_0afac188",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000095
+      },
+      "writtenOn": "2020-11-25T22:51:58Z",
+      "side": 1,
+      "message": "Thank you so much for finding this issue and proposing a fix!\nWe\u0027ve just landed something inspired by your work:\nhttps://quiche.googlesource.com/quiche/+/1de58193310572808e6aad2f4226a5341f12560a\n\nI\u0027ll be closing this pull request now that the fix is landed.\n\nThanks!",
+      "revId": "fc3aa0e01319ebc5a34df47bd575392fb06fd93d",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
