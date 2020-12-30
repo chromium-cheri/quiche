@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c8d2bf75_159b615d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000095
+      },
+      "writtenOn": "2020-12-30T14:50:28Z",
+      "side": 1,
+      "message": "Hello, could you please explain this change in more detail? I don\u0027t think it does what the description suggests.",
+      "revId": "4a0cf970a06742b5d878e25b4c5d2329f55231f3",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
