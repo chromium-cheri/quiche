@@ -1313,6 +1313,7 @@ QuicConsumedData QuicPacketCreator::ConsumeDataFastPath(
   }
 
   while (total_bytes_consumed < write_length &&
+         write_length - total_bytes_consumed > kMaxOutgoingPacketSize &&
          delegate_->ShouldGeneratePacket(HAS_RETRANSMITTABLE_DATA,
                                          NOT_HANDSHAKE)) {
     // Serialize and encrypt the packet.
