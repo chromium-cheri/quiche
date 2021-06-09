@@ -33,6 +33,23 @@
       "message": "Thank you for submitting this fix, LGTM.  Unfortunately however QUICHE is currently not set up to take contributions directly, because the source of truth is the internal code base.  I copied over this CL, please review internal change cl/378407537.  Thank you.",
       "revId": "e544f41e424df7299c5c3d70e5ad3d1dfab9c55f",
       "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "12a984f0_e85e76d1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2021-06-09T17:10:33Z",
+      "side": 1,
+      "message": "This CL has been submitted to the internal, source-of-truth codebase, and made its way to the public QUICHE repository as https://quiche.googlesource.com/quiche/+/9af8ded05b54ded8e59e8eb9364bfa3fe552fefd.",
+      "revId": "e544f41e424df7299c5c3d70e5ad3d1dfab9c55f",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
     }
   ]
 }
