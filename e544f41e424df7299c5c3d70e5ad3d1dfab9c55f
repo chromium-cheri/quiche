@@ -16,6 +16,23 @@
       "message": "Hello QUICHE team,\n\nPlease review; we\u0027re trying to enable this warning in Chromium downstream.",
       "revId": "e544f41e424df7299c5c3d70e5ad3d1dfab9c55f",
       "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9426c341_734b2d4e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2021-06-09T15:42:26Z",
+      "side": 1,
+      "message": "Thank you for submitting this fix, LGTM.  Unfortunately however QUICHE is currently not set up to take contributions directly, because the source of truth is the internal code base.  I copied over this CL, please review internal change cl/378407537.  Thank you.",
+      "revId": "e544f41e424df7299c5c3d70e5ad3d1dfab9c55f",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
     }
   ]
 }
