@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8f87edc2_8b635dfb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000880
+      },
+      "writtenOn": "2021-06-09T14:30:48Z",
+      "side": 1,
+      "message": "Hello QUICHE team,\n\nPlease review; we\u0027re trying to enable this warning in Chromium downstream.",
+      "revId": "e544f41e424df7299c5c3d70e5ad3d1dfab9c55f",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
