@@ -3882,7 +3882,7 @@ TEST_P(EndToEndTest, BadPacketHeaderFlags) {
   SendSynchronousFooRequestAndCheckResponse();
 
   // Packet with invalid public flags.
-  char packet[] = {
+  uint8_t packet[] = {
       // invalid public flags
       0xFF,
       // connection_id
@@ -3905,7 +3905,7 @@ TEST_P(EndToEndTest, BadPacketHeaderFlags) {
       0x00,
   };
   client_writer_->WritePacket(
-      &packet[0], sizeof(packet),
+      reinterpret_cast<const char*>(packet), sizeof(packet),
       client_->client()->network_helper()->GetLatestClientAddress().host(),
       server_address_, nullptr);
 
