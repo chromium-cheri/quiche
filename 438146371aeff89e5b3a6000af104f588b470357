@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9550bb3d_e38c20ae",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2021-06-17T13:12:53Z",
+      "side": 1,
+      "message": "For the record, corresponding public commit is https://quiche.googlesource.com/quiche/+/17ca6b0e1a45d3ae966632ba71f7a9485980e269.",
+      "revId": "438146371aeff89e5b3a6000af104f588b470357",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
