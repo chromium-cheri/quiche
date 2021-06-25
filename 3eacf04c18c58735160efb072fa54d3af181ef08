@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f949cfd1_a1b2b5da",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2021-06-25T19:35:55Z",
+      "side": 1,
+      "message": "For reference: https://quiche.googlesource.com/quiche/+/128091753acf520506a5b33f569cb8873180011f",
+      "revId": "3eacf04c18c58735160efb072fa54d3af181ef08",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
