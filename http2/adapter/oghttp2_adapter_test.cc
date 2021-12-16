@@ -202,7 +202,7 @@ TEST(OgHttp2AdapterClientTest, ClientHandles100Headers) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -279,7 +279,7 @@ TEST(OgHttp2AdapterClientTest, ClientRejects100HeadersWithFin) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -347,7 +347,7 @@ TEST(OgHttp2AdapterClientTest, ClientHandlesTrailers) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -427,7 +427,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsTrailers) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -458,7 +458,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsTrailers) {
                                   spdy::SpdyFrameType::DATA}));
   visitor.Clear();
 
-  const std::vector<const Header> trailers1 =
+  const std::vector<Header> trailers1 =
       ToHeaders({{"extra-info", "Trailers are weird but good?"}});
   adapter->SubmitTrailer(stream_id1, trailers1);
 
@@ -478,7 +478,7 @@ TEST(OgHttp2AdapterClientTest, ClientHandlesMetadata) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -562,7 +562,7 @@ TEST(OgHttp2AdapterClientTest, ClientHandlesMetadataWithError) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -640,7 +640,7 @@ TEST(OgHttp2AdapterClientTest, ClientRstStreamWhileHandlingHeaders) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -722,7 +722,7 @@ TEST(OgHttp2AdapterClientTest, ClientConnectionErrorWhileHandlingHeaders) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -793,7 +793,7 @@ TEST(OgHttp2AdapterClientTest, ClientConnectionErrorWhileHandlingHeadersOnly) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -863,7 +863,7 @@ TEST(OgHttp2AdapterClientTest, ClientRejectsHeaders) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -930,7 +930,7 @@ TEST(OgHttp2AdapterClientTest, ClientHandlesSmallerHpackHeaderTableSetting) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 = ToHeaders({
+  const std::vector<Header> headers1 = ToHeaders({
       {":method", "GET"},
       {":scheme", "http"},
       {":authority", "example.com"},
@@ -1022,7 +1022,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsHpackHeaderTableSetting) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 = ToHeaders({
+  const std::vector<Header> headers1 = ToHeaders({
       {":method", "GET"},
       {":scheme", "http"},
       {":authority", "example.com"},
@@ -1095,7 +1095,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsHpackHeaderTableSetting) {
   EXPECT_EQ(0, result);
   visitor.Clear();
 
-  const std::vector<const Header> headers2 = ToHeaders({
+  const std::vector<Header> headers2 = ToHeaders({
       {":method", "GET"},
       {":scheme", "http"},
       {":authority", "example.com"},
@@ -1157,7 +1157,7 @@ TEST(OgHttp2AdapterClientTest, DISABLED_ClientHandlesInvalidTrailers) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1238,7 +1238,7 @@ TEST(OgHttp2AdapterClientTest, ClientFailsOnGoAway) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1313,7 +1313,7 @@ TEST(OgHttp2AdapterClientTest, ClientRejects101Response) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1539,7 +1539,7 @@ TEST(OgHttp2AdapterClientTest, ClientForbidsPushPromise) {
 
   visitor.Clear();
 
-  const std::vector<const Header> headers =
+  const std::vector<Header> headers =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1553,7 +1553,7 @@ TEST(OgHttp2AdapterClientTest, ClientForbidsPushPromise) {
   EXPECT_THAT(visitor.data(), EqualsFrames({spdy::SpdyFrameType::HEADERS}));
   visitor.Clear();
 
-  const std::vector<const Header> push_headers =
+  const std::vector<Header> push_headers =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1611,7 +1611,7 @@ TEST(OgHttp2AdapterClientTest, ClientForbidsPushStream) {
 
   visitor.Clear();
 
-  const std::vector<const Header> headers =
+  const std::vector<Header> headers =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1763,7 +1763,7 @@ TEST(OgHttp2AdapterClientTest, ClientEncountersFlowControlBlock) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1778,7 +1778,7 @@ TEST(OgHttp2AdapterClientTest, ClientEncountersFlowControlBlock) {
       adapter->SubmitRequest(headers1, std::move(body1), nullptr);
   ASSERT_GT(stream_id1, 0);
 
-  const std::vector<const Header> headers2 =
+  const std::vector<Header> headers2 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1845,7 +1845,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsTrailersAfterFlowControlBlock) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1859,7 +1859,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsTrailersAfterFlowControlBlock) {
       adapter->SubmitRequest(headers1, std::move(body1), nullptr);
   ASSERT_GT(stream_id1, 0);
 
-  const std::vector<const Header> headers2 =
+  const std::vector<Header> headers2 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -1890,7 +1890,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsTrailersAfterFlowControlBlock) {
   EXPECT_FALSE(adapter->want_write());
   EXPECT_EQ(0, adapter->GetSendWindowSize());
 
-  const std::vector<const Header> trailers1 =
+  const std::vector<Header> trailers1 =
       ToHeaders({{"extra-info", "Trailers are weird but good?"}});
   adapter->SubmitTrailer(stream_id1, trailers1);
 
@@ -1908,7 +1908,7 @@ TEST(OgHttp2AdapterClientTest, ClientSendsMetadataAfterFlowControlBlock) {
 
   testing::InSequence s;
 
-  const std::vector<const Header> headers1 =
+  const std::vector<Header> headers1 =
       ToHeaders({{":method", "GET"},
                  {":scheme", "http"},
                  {":authority", "example.com"},
@@ -2235,7 +2235,7 @@ TEST(OgHttp2AdapterServerTest, ServerRespondsToRequestWithTrailers) {
   int64_t result = adapter->ProcessBytes(frames);
   EXPECT_EQ(frames.size(), static_cast<size_t>(result));
 
-  const std::vector<const Header> headers1 = ToHeaders({{":status", "200"}});
+  const std::vector<Header> headers1 = ToHeaders({{":status", "200"}});
   auto body1 = absl::make_unique<TestDataFrameSource>(visitor, true);
   TestDataFrameSource* body1_ptr = body1.get();
 
