@@ -259,7 +259,7 @@ QuicErrorCode CryptoFramer::Process(absl::string_view input) {
       reader.ReadTag(&message_tag);
       message_.set_tag(message_tag);
       state_ = STATE_READING_NUM_ENTRIES;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case STATE_READING_NUM_ENTRIES:
       if (reader.BytesRemaining() < kNumEntriesSize + sizeof(uint16_t)) {
         break;
@@ -275,7 +275,7 @@ QuicErrorCode CryptoFramer::Process(absl::string_view input) {
       tags_and_lengths_.reserve(num_entries_);
       state_ = STATE_READING_TAGS_AND_LENGTHS;
       values_len_ = 0;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case STATE_READING_TAGS_AND_LENGTHS: {
       if (reader.BytesRemaining() <
           num_entries_ * (kQuicTagSize + kCryptoEndOffsetSize)) {
@@ -309,7 +309,7 @@ QuicErrorCode CryptoFramer::Process(absl::string_view input) {
       }
       values_len_ = last_end_offset;
       state_ = STATE_READING_VALUES;
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     }
     case STATE_READING_VALUES:
       if (reader.BytesRemaining() < values_len_) {

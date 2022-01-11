@@ -399,11 +399,11 @@ class TestSession : public QuicSession {
         stream_id, perspective(), is_incoming_stream, version());
     switch (type) {
       case STREAM_FRAME:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case RST_STREAM_FRAME:
         return is_incoming_stream;
       case STOP_SENDING_FRAME:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case WINDOW_UPDATE_FRAME:
         return stream_type == BIDIRECTIONAL;
       default:

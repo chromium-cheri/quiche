@@ -954,7 +954,7 @@ size_t QuicFramer::BuildDataPacket(const QuicPacketHeader& header,
         break;
       case MTU_DISCOVERY_FRAME:
         // MTU discovery frames are serialized as ping frames.
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case PING_FRAME:
         // Ping has no payload.
         break;
@@ -1103,7 +1103,7 @@ size_t QuicFramer::AppendIetfFrames(const QuicFrames& frames,
         return 0;
       case MTU_DISCOVERY_FRAME:
         // MTU discovery frames are serialized as ping frames.
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case PING_FRAME:
         // Ping has no payload.
         break;
@@ -3069,7 +3069,7 @@ bool QuicFramer::ProcessFrameData(QuicDataReader* reader,
         continue;
       }
       case IETF_EXTENSION_MESSAGE_NO_LENGTH:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case IETF_EXTENSION_MESSAGE: {
         QuicMessageFrame message_frame;
         if (!ProcessMessageFrame(reader,
@@ -3423,7 +3423,7 @@ bool QuicFramer::ProcessIetfFrameData(QuicDataReader* reader,
                 << ENDPOINT << "IETF_ACK_RECEIVE_TIMESTAMPS not supported";
             return RaiseError(QUIC_INVALID_FRAME_DATA);
           }
-          ABSL_FALLTHROUGH_INTENDED;
+          [[fallthrough]];
         case IETF_ACK_ECN:
         case IETF_ACK: {
           QuicAckFrame frame;
@@ -3462,7 +3462,7 @@ bool QuicFramer::ProcessIetfFrameData(QuicDataReader* reader,
           break;
         }
         case IETF_EXTENSION_MESSAGE_NO_LENGTH_V99:
-          ABSL_FALLTHROUGH_INTENDED;
+          [[fallthrough]];
         case IETF_EXTENSION_MESSAGE_V99: {
           QuicMessageFrame message_frame;
           if (!ProcessMessageFrame(

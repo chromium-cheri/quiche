@@ -76,7 +76,7 @@ DecodeStatus PriorityUpdatePayloadDecoder::ResumeDecodingPayload(
       case PayloadState::kStartDecodingFixedFields:
         status = state->StartDecodingStructureInPayload(
             &priority_update_fields_, db);
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kHandleFixedFieldsStatus:
         if (status == DecodeStatus::kDecodeDone) {
@@ -95,7 +95,7 @@ DecodeStatus PriorityUpdatePayloadDecoder::ResumeDecodingPayload(
           payload_state_ = PayloadState::kResumeDecodingFixedFields;
           return status;
         }
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kReadPriorityFieldValue:
         // Anything left in the decode buffer is the Priority Field Value.

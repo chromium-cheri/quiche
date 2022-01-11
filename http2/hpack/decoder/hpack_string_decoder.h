@@ -96,7 +96,7 @@ class QUICHE_EXPORT_PRIVATE HpackStringDecoder {
           // buffer, and hence this fall through skips another trip through the
           // switch above and more importantly skips setting the state_ variable
           // again in those cases where we don't need it.
-          HTTP2_FALLTHROUGH;
+          [[fallthrough]];
 
         case kDecodingString:
           HTTP2_DVLOG(2) << "kDecodingString: db->Remaining=" << db->Remaining()

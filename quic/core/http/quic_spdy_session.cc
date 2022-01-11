@@ -1135,11 +1135,11 @@ bool QuicSpdySession::OnSetting(uint64_t id, uint64_t value) {
         break;
       }
       case spdy::SETTINGS_ENABLE_PUSH:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case spdy::SETTINGS_MAX_CONCURRENT_STREAMS:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case spdy::SETTINGS_INITIAL_WINDOW_SIZE:
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case spdy::SETTINGS_MAX_FRAME_SIZE:
         CloseConnectionWithDetails(
             QUIC_HTTP_RECEIVE_SPDY_SETTING,

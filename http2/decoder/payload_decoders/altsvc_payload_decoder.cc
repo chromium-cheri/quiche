@@ -72,7 +72,7 @@ DecodeStatus AltSvcPayloadDecoder::ResumeDecodingPayload(
     switch (payload_state_) {
       case PayloadState::kStartDecodingStruct:
         status = state->StartDecodingStructureInPayload(&altsvc_fields_, db);
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kMaybeDecodedStruct:
         if (status == DecodeStatus::kDecodeDone &&
@@ -95,7 +95,7 @@ DecodeStatus AltSvcPayloadDecoder::ResumeDecodingPayload(
                            state->remaining_payload());
           return state->ReportFrameSizeError();
         }
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kDecodingStrings:
         return DecodeStrings(state, db);

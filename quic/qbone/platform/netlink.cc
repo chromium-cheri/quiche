@@ -259,7 +259,7 @@ class LocalAddressParser : public NetlinkParserInterface {
 
       switch (interface_address->ifa_family) {
         case AF_INET:
-          ABSL_FALLTHROUGH_INTENDED;
+          [[fallthrough]];
         case AF_INET6:
           // QuicIpAddress knows how to parse ip from raw bytes as long as they
           // are in network byte order.

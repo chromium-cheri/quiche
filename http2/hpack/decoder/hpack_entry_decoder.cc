@@ -112,7 +112,7 @@ DecodeStatus HpackEntryDecoder::Resume(DecodeBuffer* db,
           return status;
         }
         state_ = EntryDecoderState::kDecodedType;
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case EntryDecoderState::kDecodedType:
         // entry_type_decoder_ returned kDecodeDone, now need to decide how
@@ -144,7 +144,7 @@ DecodeStatus HpackEntryDecoder::Resume(DecodeBuffer* db,
           return status;
         }
         state_ = EntryDecoderState::kStartDecodingValue;
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case EntryDecoderState::kStartDecodingValue:
         HTTP2_DVLOG(1) << "kStartDecodingValue: db->Remaining="

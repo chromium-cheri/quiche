@@ -45,7 +45,7 @@ SendAlgorithmInterface* SendAlgorithmInterface::Create(
               : nullptr);
     case kPCC:
       // PCC is currently not supported, fall back to CUBIC instead.
-      ABSL_FALLTHROUGH_INTENDED;
+      [[fallthrough]];
     case kCubicBytes:
       return new TcpCubicSenderBytes(
           clock, rtt_stats, false /* don't use Reno */,

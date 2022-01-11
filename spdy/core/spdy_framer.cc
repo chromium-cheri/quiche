@@ -421,7 +421,7 @@ std::unique_ptr<SpdyFrameSequence> SpdyFramer::CreateIterator(
     }
     case SpdyFrameType::DATA: {
       QUICHE_DVLOG(1) << "Serialize a stream end DATA frame for VTL";
-      HTTP2_FALLTHROUGH;
+      [[fallthrough]];
     }
     default: {
       return std::make_unique<SpdyControlFrameIterator>(framer,

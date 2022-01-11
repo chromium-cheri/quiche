@@ -129,7 +129,7 @@ DecodeStatus HeadersPayloadDecoder::ResumeDecodingPayload(
           payload_state_ = PayloadState::kReadPayload;
           continue;
         }
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kStartDecodingPriorityFields:
         status = state->StartDecodingStructureInPayload(&priority_fields_, db);
@@ -138,7 +138,7 @@ DecodeStatus HeadersPayloadDecoder::ResumeDecodingPayload(
           return status;
         }
         state->listener()->OnHeadersPriority(priority_fields_);
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kReadPayload:
         avail = state->AvailablePayload(db);
@@ -151,7 +151,7 @@ DecodeStatus HeadersPayloadDecoder::ResumeDecodingPayload(
           payload_state_ = PayloadState::kReadPayload;
           return DecodeStatus::kDecodeInProgress;
         }
-        HTTP2_FALLTHROUGH;
+        [[fallthrough]];
 
       case PayloadState::kSkipPadding:
         // SkipPadding handles the OnPadding callback.
