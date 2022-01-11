@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "62753956_cc144297",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2022-01-11T15:46:45Z",
+      "side": 1,
+      "message": "Hi Roland, thank you for your proposal.  As QUICHE is used as a third_party on other platforms that don\u0027t support C++17 yet, I\u0027ll migrate to ABSL_FALLTHROUGH_INTENDED instead of [[fallthrough]].",
+      "revId": "18c64964e092f9639ff374aae4017f11faed2703",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
