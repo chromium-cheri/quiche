@@ -73,10 +73,14 @@ bool QuicPacketReader::ReadAndDispatchPackets(
 
     QuicIpAddress self_ip = GetSelfIpFromPacketInfo(
         result.packet_info, peer_address.host().IsIPv6());
+
+    // Fuchsia currenly doesn't support IP_PKTINFO (see fxbug.dev/112548).
+#ifndef __Fuchsia__
     if (!self_ip.IsInitialized()) {
       QUIC_BUG(quic_bug_10329_2) << "Unable to get self IP address.";
       continue;
     }
+#endif  // __Fuchsia__
 
     bool has_ttl = result.packet_info.HasValue(QuicUdpPacketInfoBit::TTL);
     int ttl = has_ttl ? result.packet_info.ttl() : 0;
