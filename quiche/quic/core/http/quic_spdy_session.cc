@@ -1137,7 +1137,7 @@ bool QuicSpdySession::OnSetting(uint64_t id, uint64_t value) {
           return false;
         }
         if (perspective() == Perspective::IS_CLIENT) {
-          allow_extended_connect_ = value != 0;
+          allow_extended_connect_ = value;
         }
         break;
       }
