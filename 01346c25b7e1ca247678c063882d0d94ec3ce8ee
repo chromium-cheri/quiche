@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3a3f7ac1_e06f0b87",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2023-03-10T21:02:42Z",
+      "side": 1,
+      "message": "Thank you for submitting this patch.  QUICHE does not take contributions to the public repository.  I\u0027ll submit this patch internally.",
+      "revId": "01346c25b7e1ca247678c063882d0d94ec3ce8ee",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    }
+  ]
+}
