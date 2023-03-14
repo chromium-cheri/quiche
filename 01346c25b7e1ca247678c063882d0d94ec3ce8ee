@@ -16,6 +16,23 @@
       "message": "Thank you for submitting this patch.  QUICHE does not take contributions to the public repository.  I\u0027ll submit this patch internally.",
       "revId": "01346c25b7e1ca247678c063882d0d94ec3ce8ee",
       "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f15671a4_ed6ca8e7",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000060
+      },
+      "writtenOn": "2023-03-14T13:29:47Z",
+      "side": 1,
+      "message": "This has been submitted internally, and then mirrored to the public repository as https://quiche.googlesource.com/quiche/+/e2cb2d0ee59e82a68f3132359c2a80f3f3184f16.  Thank you.",
+      "revId": "01346c25b7e1ca247678c063882d0d94ec3ce8ee",
+      "serverId": "6cd04770-3c6a-3732-a6a3-94aeb48175de"
     }
   ]
 }
