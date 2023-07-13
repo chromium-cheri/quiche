@@ -276,7 +276,7 @@ class QUIC_EXPORT_PRIVATE QuicFramer {
   virtual ~QuicFramer();
 
   // Returns true if |version| is a supported transport version.
-  bool IsSupportedTransportVersion(const QuicTransportVersion version) const;
+  bool IsSupportedTransportVersion(const ParsedQuicVersion version) const;
 
   // Returns true if |version| is a supported protocol version.
   bool IsSupportedVersion(const ParsedQuicVersion version) const;
