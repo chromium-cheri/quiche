@@ -76,7 +76,11 @@ class QUIC_NO_EXPORT QuicArenaScopedPtr {
   QuicArenaScopedPtr& operator=(const QuicArenaScopedPtr&) = delete;
 
   // Low-order bits of value_ that determine if the pointer came from an arena.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  static const ptraddr_t kFromArenaMask = 0x1;
+#else // defined(__CHERI_PURE_CAPABILITY__)
   static const uintptr_t kFromArenaMask = 0x1;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   // Every platform we care about has at least 4B aligned integers, so store the
   // is_from_arena bit in the least significant bit.
