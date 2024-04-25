@@ -487,20 +487,34 @@ void QuicUnackedPacketMap::MaybeAggregateAckedStreamFrame(
     // Determine whether acked stream frame can be aggregated.
     const bool can_aggregate =
         frame.type == STREAM_FRAME &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame.stream_frame->stream_id == aggregated_stream_frame_.stream_id &&
+        frame.stream_frame->offset == aggregated_stream_frame_.offset +
+#else // defined(__CHERI_PURE_CAPABILITY__)
         frame.stream_frame.stream_id == aggregated_stream_frame_.stream_id &&
         frame.stream_frame.offset == aggregated_stream_frame_.offset +
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                                          aggregated_stream_frame_.data_length &&
         // We would like to increment aggregated_stream_frame_.data_length by
         // frame.stream_frame.data_length, so we need to make sure their sum is
         // representable by QuicPacketLength, which is the type of the former.
         !WillStreamFrameLengthSumWrapAround(
             aggregated_stream_frame_.data_length,
+#if defined(__CHERI_PURE_CAPABILITY__)
+            frame.stream_frame->data_length);
+#else // defined(__CHERI_PURE_CAPABILITY__)
             frame.stream_frame.data_length);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
     if (can_aggregate) {
       // Aggregate stream frame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+      aggregated_stream_frame_.data_length += frame.stream_frame->data_length;
+      aggregated_stream_frame_.fin = frame.stream_frame->fin;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       aggregated_stream_frame_.data_length += frame.stream_frame.data_length;
       aggregated_stream_frame_.fin = frame.stream_frame.fin;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       if (aggregated_stream_frame_.fin) {
         // Notify session notifier aggregated stream frame gets acked if fin is
         // acked.
@@ -510,17 +524,30 @@ void QuicUnackedPacketMap::MaybeAggregateAckedStreamFrame(
     }
 
     NotifyAggregatedStreamFrameAcked(ack_delay);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (frame.type != STREAM_FRAME || frame.stream_frame->fin) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (frame.type != STREAM_FRAME || frame.stream_frame.fin) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       session_notifier_->OnFrameAcked(frame, ack_delay, receive_timestamp);
       continue;
     }
 
     // Delay notifying session notifier stream frame gets acked in case it can
     // be aggregated with following acked ones.
+#if defined(__CHERI_PURE_CAPABILITY__)
+    aggregated_stream_frame_.stream_id = frame.stream_frame->stream_id;
+    aggregated_stream_frame_.offset = frame.stream_frame->offset;
+    aggregated_stream_frame_.data_length = frame.stream_frame->data_length;
+    aggregated_stream_frame_.fin = frame.stream_frame->fin;
+    aggregated_stream_frame_.fin = frame.stream_frame->fin;
+#else // defined(__CHERI_PURE_CAPABILITY__)
     aggregated_stream_frame_.stream_id = frame.stream_frame.stream_id;
     aggregated_stream_frame_.offset = frame.stream_frame.offset;
     aggregated_stream_frame_.data_length = frame.stream_frame.data_length;
     aggregated_stream_frame_.fin = frame.stream_frame.fin;
+    aggregated_stream_frame_.fin = frame.stream_frame.fin;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
 }
 
@@ -533,7 +560,11 @@ void QuicUnackedPacketMap::NotifyAggregatedStreamFrameAcked(
   }
   // Note: there is no receive_timestamp for an aggregated stream frame.  The
   // frames that are aggregated may not have been received at the same time.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_notifier_->OnFrameAcked(QuicFrame(&aggregated_stream_frame_),
+#else // defined(__CHERI_PURE_CAPABILITY__)
   session_notifier_->OnFrameAcked(QuicFrame(aggregated_stream_frame_),
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                                   ack_delay,
                                   /*receive_timestamp=*/QuicTime::Zero());
   // Clear aggregated stream frame.

@@ -1263,9 +1263,17 @@ TEST_P(QuicSessionTestServer, SendStreamsBlocked) {
   // Next checking causes STREAMS_BLOCKED to be sent.
   EXPECT_CALL(*connection_, SendControlFrame(_))
       .WillOnce(Invoke([](const QuicFrame& frame) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        EXPECT_FALSE(frame.streams_blocked_frame->unidirectional);
+#else   // !__CHERI_PURE_CAPABILITY__
         EXPECT_FALSE(frame.streams_blocked_frame.unidirectional);
+#endif  // !__CHERI_PURE_CAPABILITY__
         EXPECT_EQ(kDefaultMaxStreamsPerConnection,
+#if defined(__CHERI_PURE_CAPABILITY__)
+                  frame.streams_blocked_frame->stream_count);
+#else   // !__CHERI_PURE_CAPABILITY__
                   frame.streams_blocked_frame.stream_count);
+#endif  // !__CHERI_PURE_CAPABILITY__
         ClearControlFrame(frame);
         return true;
       }));
@@ -1278,9 +1286,17 @@ TEST_P(QuicSessionTestServer, SendStreamsBlocked) {
   // Next checking causes STREAM_BLOCKED to be sent.
   EXPECT_CALL(*connection_, SendControlFrame(_))
       .WillOnce(Invoke([](const QuicFrame& frame) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        EXPECT_TRUE(frame.streams_blocked_frame->unidirectional);
+#else   // !__CHERI_PURE_CAPABILITY__
         EXPECT_TRUE(frame.streams_blocked_frame.unidirectional);
+#endif  // !__CHERI_PURE_CAPABILITY__
         EXPECT_EQ(kDefaultMaxStreamsPerConnection,
+#if defined(__CHERI_PURE_CAPABILITY__)
+                  frame.streams_blocked_frame->stream_count);
+#else   // !__CHERI_PURE_CAPABILITY__
                   frame.streams_blocked_frame.stream_count);
+#endif  // !__CHERI_PURE_CAPABILITY__
         ClearControlFrame(frame);
         return true;
       }));
@@ -2445,14 +2461,26 @@ TEST_P(QuicSessionTestServer, OnStreamFrameLost) {
         .WillOnce(Return(true));
   }
   EXPECT_CALL(*stream2, HasPendingRetransmission()).WillOnce(Return(true));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame3));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (!QuicVersionUsesCryptoFrames(connection_->transport_version())) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    session_.OnFrameLost(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
     session_.OnFrameLost(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
   } else {
     QuicCryptoFrame crypto_frame(ENCRYPTION_INITIAL, 0, 1300);
     session_.OnFrameLost(QuicFrame(&crypto_frame));
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_.WillingAndAbleToWrite());
 
   // Mark streams 2 and 4 write blocked.
@@ -2509,9 +2537,15 @@ TEST_P(QuicSessionTestServer, DonotRetransmitDataOfClosedStreams) {
   EXPECT_CALL(*stream6, HasPendingRetransmission()).WillOnce(Return(true));
   EXPECT_CALL(*stream4, HasPendingRetransmission()).WillOnce(Return(true));
   EXPECT_CALL(*stream2, HasPendingRetransmission()).WillOnce(Return(true));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame3));
+  session_.OnFrameLost(QuicFrame(&frame2));
+  session_.OnFrameLost(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame3));
   session_.OnFrameLost(QuicFrame(frame2));
   session_.OnFrameLost(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   session_.MarkConnectionLevelWriteBlocked(stream2->id());
   session_.MarkConnectionLevelWriteBlocked(stream4->id());
@@ -2552,10 +2586,17 @@ TEST_P(QuicSessionTestServer, RetransmitFrames) {
   QuicStreamFrame frame3(stream6->id(), false, 0, 9);
   QuicWindowUpdateFrame window_update(1, stream2->id(), 9);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1));
+  frames.push_back(QuicFrame(&window_update));
+  frames.push_back(QuicFrame(&frame2));
+  frames.push_back(QuicFrame(&frame3));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1));
   frames.push_back(QuicFrame(window_update));
   frames.push_back(QuicFrame(frame2));
   frames.push_back(QuicFrame(frame3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(session_.WillingAndAbleToWrite());
 
   EXPECT_CALL(*stream2, RetransmitStreamData(_, _, _, _))
@@ -2582,7 +2623,11 @@ TEST_P(QuicSessionTestServer, RetransmitLostDataCausesConnectionClose) {
       .Times(2)
       .WillOnce(Return(true))
       .WillOnce(Return(false));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   // Retransmit stream data causes connection close. Stream has not sent fin
   // yet, so an RST is sent.
   EXPECT_CALL(*stream, OnCanWrite()).WillOnce(Invoke([this, stream]() {
@@ -2658,7 +2703,11 @@ TEST_P(QuicSessionTestServer, LocallyResetZombieStreams) {
   QuicStreamFrame frame(stream2->id(), true, 0, 100);
   EXPECT_CALL(*stream2, HasPendingRetransmission())
       .WillRepeatedly(Return(true));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Reset stream2 locally.
   EXPECT_CALL(*connection_, SendControlFrame(_))

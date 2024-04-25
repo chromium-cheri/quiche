@@ -51,7 +51,11 @@ class UberLossAlgorithmTest : public QuicTest {
                             PACKET_1BYTE_PACKET_NUMBER, nullptr, kDefaultLength,
                             false, false);
     packet.encryption_level = encryption_level;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    packet.retransmittable_frames.push_back(QuicFrame(&frame));
+#else    // !__CHERI_PURE_CAPABILITY__
     packet.retransmittable_frames.push_back(QuicFrame(frame));
+#endif   // !__CHERI_PURE_CAPABILITY__
     unacked_packets_->AddSentPacket(&packet, NOT_RETRANSMISSION, clock_.Now(),
                                     true, true, ECN_NOT_ECT);
   }

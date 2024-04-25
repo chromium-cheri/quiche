@@ -86,12 +86,20 @@ TEST_F(QuicPacketsTest, CopySerializedPacket) {
   SerializedPacket packet(QuicPacketNumber(1), PACKET_1BYTE_PACKET_NUMBER,
                           buffer.data(), buffer.length(), /*has_ack=*/false,
                           /*has_stop_waiting=*/false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet.retransmittable_frames.push_back(QuicFrame(new QuicWindowUpdateFrame()));
+  packet.retransmittable_frames.push_back(QuicFrame(new QuicStreamFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   packet.retransmittable_frames.push_back(QuicFrame(QuicWindowUpdateFrame()));
   packet.retransmittable_frames.push_back(QuicFrame(QuicStreamFrame()));
-
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicAckFrame ack_frame(InitAckFrame(1));
   packet.nonretransmittable_frames.push_back(QuicFrame(&ack_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet.nonretransmittable_frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   packet.nonretransmittable_frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   std::unique_ptr<SerializedPacket> copy = absl::WrapUnique<SerializedPacket>(
       CopySerializedPacket(packet, &allocator, /*copy_buffer=*/true));

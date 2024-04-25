@@ -49,6 +49,21 @@ namespace quic {
 struct QUIC_EXPORT_PRIVATE QuicFrame {
   QuicFrame();
   // Please keep the constructors in the same order as the union below.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  explicit QuicFrame(QuicPaddingFrame *padding_frame);
+  explicit QuicFrame(QuicMtuDiscoveryFrame *frame);
+  explicit QuicFrame(QuicPingFrame *frame);
+  explicit QuicFrame(QuicMaxStreamsFrame *frame);
+  explicit QuicFrame(QuicStopWaitingFrame *frame);
+  explicit QuicFrame(QuicStreamsBlockedFrame *frame);
+  explicit QuicFrame(QuicStreamFrame *stream_frame);
+  explicit QuicFrame(QuicHandshakeDoneFrame *handshake_done_frame);
+  explicit QuicFrame(QuicWindowUpdateFrame *frame);
+  explicit QuicFrame(QuicBlockedFrame *frame);
+  explicit QuicFrame(QuicStopSendingFrame *frame);
+  explicit QuicFrame(QuicPathChallengeFrame *frame);
+  explicit QuicFrame(QuicPathResponseFrame *frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   explicit QuicFrame(QuicPaddingFrame padding_frame);
   explicit QuicFrame(QuicMtuDiscoveryFrame frame);
   explicit QuicFrame(QuicPingFrame frame);
@@ -62,6 +77,7 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
   explicit QuicFrame(QuicStopSendingFrame frame);
   explicit QuicFrame(QuicPathChallengeFrame frame);
   explicit QuicFrame(QuicPathResponseFrame frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   explicit QuicFrame(QuicAckFrame* frame);
   explicit QuicFrame(QuicRstStreamFrame* frame);
@@ -82,6 +98,7 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
     // Overlapping inlined frames have a |type| field at the same 0 offset as
     // QuicFrame does for out of line frames below, allowing use of the
     // remaining 7 bytes after offset for frame-type specific fields.
+#if !defined(__CHERI_PURE_CAPABILITY__)
     QuicPaddingFrame padding_frame;
     QuicMtuDiscoveryFrame mtu_discovery_frame;
     QuicPingFrame ping_frame;
@@ -95,6 +112,7 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
     QuicStopSendingFrame stop_sending_frame;
     QuicPathChallengeFrame path_challenge_frame;
     QuicPathResponseFrame path_response_frame;
+#endif // !defined(__CHERI_PURE_CAPABILITY__)
 
     // Out of line frames.
     struct {
@@ -115,6 +133,21 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
         QuicCryptoFrame* crypto_frame;
         QuicAckFrequencyFrame* ack_frequency_frame;
         QuicNewTokenFrame* new_token_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+        QuicPaddingFrame *padding_frame;
+        QuicMtuDiscoveryFrame *mtu_discovery_frame;
+        QuicPingFrame *ping_frame;
+        QuicMaxStreamsFrame *max_streams_frame;
+        QuicStopWaitingFrame *stop_waiting_frame;
+        QuicStreamsBlockedFrame *streams_blocked_frame;
+        QuicStreamFrame *stream_frame;
+        QuicHandshakeDoneFrame *handshake_done_frame;
+        QuicWindowUpdateFrame *window_update_frame;
+        QuicBlockedFrame *blocked_frame;
+        QuicStopSendingFrame *stop_sending_frame;
+        QuicPathChallengeFrame *path_challenge_frame;
+        QuicPathResponseFrame *path_response_frame;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       };
     };
   };
@@ -122,8 +155,13 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
 
 static_assert(std::is_standard_layout<QuicFrame>::value,
               "QuicFrame must have a standard layout");
+#if defined(__CHERI_PURE_CAPABILITY__)
+static_assert(sizeof(QuicFrame) <= 32,
+              "Frames larger than 32 bytes should be referenced by pointer.");
+#else // defined(__CHERI_PURE_CAPABILITY__)
 static_assert(sizeof(QuicFrame) <= 24,
               "Frames larger than 24 bytes should be referenced by pointer.");
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 static_assert(offsetof(QuicStreamFrame, type) == offsetof(QuicFrame, type),
               "Offset of |type| must match in QuicFrame and QuicStreamFrame");
 

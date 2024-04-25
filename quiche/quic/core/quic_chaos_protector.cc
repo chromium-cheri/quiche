@@ -177,7 +177,11 @@ void QuicChaosProtector::AddPingFrames() {
       random_->InsecureRandUint64() %
       std::min<uint64_t>(kMaxAddedPingFrames, remaining_padding_bytes_);
   for (uint64_t i = 0; i < num_ping_frames; i++) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames_.push_back(QuicFrame(new QuicPingFrame()));
+#else // defined(__CHERI_PURE_CAPABILITY__)
     frames_.push_back(QuicFrame(QuicPingFrame()));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
   remaining_padding_bytes_ -= static_cast<int>(num_ping_frames);
 }
@@ -197,12 +201,20 @@ void QuicChaosProtector::SpreadPadding() {
       continue;
     }
     it = frames_.insert(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        it, QuicFrame(new QuicPaddingFrame(padding_bytes_in_this_frame)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
         it, QuicFrame(QuicPaddingFrame(padding_bytes_in_this_frame)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     ++it;  // Skip over the padding frame we just added.
     remaining_padding_bytes_ -= padding_bytes_in_this_frame;
   }
   if (remaining_padding_bytes_ > 0) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames_.push_back(QuicFrame(new QuicPaddingFrame(remaining_padding_bytes_)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
     frames_.push_back(QuicFrame(QuicPaddingFrame(remaining_padding_bytes_)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
 }
 

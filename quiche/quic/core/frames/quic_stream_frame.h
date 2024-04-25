@@ -15,8 +15,12 @@
 
 namespace quic {
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+struct QUIC_EXPORT_PRIVATE QuicStreamFrame {
+#else // defined(__CHERI_PURE_CAPABILITY__)
 struct QUIC_EXPORT_PRIVATE QuicStreamFrame
     : public QuicInlinedFrame<QuicStreamFrame> {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   QuicStreamFrame();
   QuicStreamFrame(QuicStreamId stream_id, bool fin, QuicStreamOffset offset,
                   absl::string_view data);

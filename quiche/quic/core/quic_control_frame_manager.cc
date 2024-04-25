@@ -79,21 +79,33 @@ void QuicControlFrameManager::WriteOrBufferWindowUpdate(
     QuicStreamId id, QuicStreamOffset byte_offset) {
   QUIC_DVLOG(1) << "Writing WINDOW_UPDATE_FRAME";
   WriteOrBufferQuicFrame(QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      new QuicWindowUpdateFrame(++last_control_frame_id_, id, byte_offset)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       QuicWindowUpdateFrame(++last_control_frame_id_, id, byte_offset)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 void QuicControlFrameManager::WriteOrBufferBlocked(
     QuicStreamId id, QuicStreamOffset byte_offset) {
   QUIC_DVLOG(1) << "Writing BLOCKED_FRAME";
   WriteOrBufferQuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicBlockedFrame(++last_control_frame_id_, id, byte_offset)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       QuicFrame(QuicBlockedFrame(++last_control_frame_id_, id, byte_offset)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 void QuicControlFrameManager::WriteOrBufferStreamsBlocked(QuicStreamCount count,
                                                           bool unidirectional) {
   QUIC_DVLOG(1) << "Writing STREAMS_BLOCKED Frame";
   QUIC_CODE_COUNT(quic_streams_blocked_transmits);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  WriteOrBufferQuicFrame(QuicFrame(new QuicStreamsBlockedFrame(
+#else // defined(__CHERI_PURE_CAPABILITY__)
   WriteOrBufferQuicFrame(QuicFrame(QuicStreamsBlockedFrame(
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       ++last_control_frame_id_, count, unidirectional)));
 }
 
@@ -102,20 +114,32 @@ void QuicControlFrameManager::WriteOrBufferMaxStreams(QuicStreamCount count,
   QUIC_DVLOG(1) << "Writing MAX_STREAMS Frame";
   QUIC_CODE_COUNT(quic_max_streams_transmits);
   WriteOrBufferQuicFrame(QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      new QuicMaxStreamsFrame(++last_control_frame_id_, count, unidirectional)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       QuicMaxStreamsFrame(++last_control_frame_id_, count, unidirectional)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 void QuicControlFrameManager::WriteOrBufferStopSending(
     QuicResetStreamError error, QuicStreamId stream_id) {
   QUIC_DVLOG(1) << "Writing STOP_SENDING_FRAME";
   WriteOrBufferQuicFrame(QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      new QuicStopSendingFrame(++last_control_frame_id_, stream_id, error)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       QuicStopSendingFrame(++last_control_frame_id_, stream_id, error)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 void QuicControlFrameManager::WriteOrBufferHandshakeDone() {
   QUIC_DVLOG(1) << "Writing HANDSHAKE_DONE";
   WriteOrBufferQuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicHandshakeDoneFrame(++last_control_frame_id_)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       QuicFrame(QuicHandshakeDoneFrame(++last_control_frame_id_)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 void QuicControlFrameManager::WriteOrBufferAckFrequency(
@@ -162,7 +186,11 @@ void QuicControlFrameManager::OnControlFrameSent(const QuicFrame& frame) {
     return;
   }
   if (frame.type == WINDOW_UPDATE_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    QuicStreamId stream_id = frame.window_update_frame->stream_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
     QuicStreamId stream_id = frame.window_update_frame.stream_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     if (window_update_frames_.contains(stream_id) &&
         id > window_update_frames_[stream_id]) {
       // Consider the older window update of the same stream as acked.
@@ -192,7 +220,11 @@ bool QuicControlFrameManager::OnControlFrameAcked(const QuicFrame& frame) {
     return false;
   }
   if (frame.type == WINDOW_UPDATE_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    QuicStreamId stream_id = frame.window_update_frame->stream_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
     QuicStreamId stream_id = frame.window_update_frame.stream_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     if (window_update_frames_.contains(stream_id) &&
         window_update_frames_[stream_id] == id) {
       window_update_frames_.erase(stream_id);

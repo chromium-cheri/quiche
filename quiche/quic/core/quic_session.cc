@@ -2280,14 +2280,23 @@ bool QuicSession::OnFrameAcked(const QuicFrame& frame,
     return control_frame_manager_.OnControlFrameAcked(frame);
   }
   bool new_stream_data_acked = false;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicStream* stream = GetStream(frame.stream_frame->stream_id);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicStream* stream = GetStream(frame.stream_frame.stream_id);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   // Stream can already be reset when sent frame gets acked.
   if (stream != nullptr) {
     QuicByteCount newly_acked_length = 0;
     new_stream_data_acked = stream->OnStreamFrameAcked(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame.stream_frame->offset, frame.stream_frame->data_length,
+        frame.stream_frame->fin, ack_delay_time, receive_timestamp,
+#else // defined(__CHERI_PURE_CAPABILITY__)
         frame.stream_frame.offset, frame.stream_frame.data_length,
         frame.stream_frame.fin, ack_delay_time, receive_timestamp,
-        &newly_acked_length);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
+  &newly_acked_length);
     if (!stream->HasPendingRetransmission()) {
       streams_with_pending_retransmission_.erase(stream->id());
     }
@@ -2323,18 +2332,36 @@ void QuicSession::OnFrameLost(const QuicFrame& frame) {
     control_frame_manager_.OnControlFrameLost(frame);
     return;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicStream* stream = GetStream(frame.stream_frame->stream_id);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicStream* stream = GetStream(frame.stream_frame.stream_id);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   if (stream == nullptr) {
     return;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  stream->OnStreamFrameLost(frame.stream_frame->offset,
+                            frame.stream_frame->data_length,
+                            frame.stream_frame->fin);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   stream->OnStreamFrameLost(frame.stream_frame.offset,
                             frame.stream_frame.data_length,
                             frame.stream_frame.fin);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   if (stream->HasPendingRetransmission() &&
       !streams_with_pending_retransmission_.contains(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          frame.stream_frame->stream_id)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
           frame.stream_frame.stream_id)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     streams_with_pending_retransmission_.insert(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        std::make_pair(frame.stream_frame->stream_id, true));
+#else // defined(__CHERI_PURE_CAPABILITY__)
         std::make_pair(frame.stream_frame.stream_id, true));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
 }
 
@@ -2358,11 +2385,21 @@ bool QuicSession::RetransmitFrames(const QuicFrames& frames,
       }
       continue;
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    QuicStream* stream = GetStream(frame.stream_frame->stream_id);
+#else // defined(__CHERI_PURE_CAPABILITY__)
     QuicStream* stream = GetStream(frame.stream_frame.stream_id);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     if (stream != nullptr &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+        !stream->RetransmitStreamData(frame.stream_frame->offset,
+                                      frame.stream_frame->data_length,
+                                      frame.stream_frame->fin, type)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         !stream->RetransmitStreamData(frame.stream_frame.offset,
                                       frame.stream_frame.data_length,
                                       frame.stream_frame.fin, type)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return false;
     }
   }
@@ -2381,11 +2418,21 @@ bool QuicSession::IsFrameOutstanding(const QuicFrame& frame) const {
   if (frame.type != STREAM_FRAME) {
     return control_frame_manager_.IsControlFrameOutstanding(frame);
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicStream* stream = GetStream(frame.stream_frame->stream_id);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicStream* stream = GetStream(frame.stream_frame.stream_id);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   return stream != nullptr &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+         stream->IsStreamFrameOutstanding(frame.stream_frame->offset,
+                                          frame.stream_frame->data_length,
+                                          frame.stream_frame->fin);
+#else // defined(__CHERI_PURE_CAPABILITY__)
          stream->IsStreamFrameOutstanding(frame.stream_frame.offset,
                                           frame.stream_frame.data_length,
                                           frame.stream_frame.fin);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 bool QuicSession::HasUnackedCryptoData() const {

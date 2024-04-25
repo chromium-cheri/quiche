@@ -654,9 +654,17 @@ size_t QuicFramer::GetRetransmittableControlFrameSize(
       // For IETF QUIC, this could be either a MAX DATA or MAX STREAM DATA.
       // GetWindowUpdateFrameSize figures this out and returns the correct
       // length.
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetWindowUpdateFrameSize(version, *frame.window_update_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetWindowUpdateFrameSize(version, frame.window_update_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetBlockedFrameSize(version, *frame.blocked_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetBlockedFrameSize(version, frame.blocked_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case NEW_CONNECTION_ID_FRAME:
       return GetNewConnectionIdFrameSize(*frame.new_connection_id_frame);
     case RETIRE_CONNECTION_ID_FRAME:
@@ -664,15 +672,35 @@ size_t QuicFramer::GetRetransmittableControlFrameSize(
     case NEW_TOKEN_FRAME:
       return GetNewTokenFrameSize(*frame.new_token_frame);
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetMaxStreamsFrameSize(version, *frame.max_streams_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetMaxStreamsFrameSize(version, frame.max_streams_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetStreamsBlockedFrameSize(version, *frame.streams_blocked_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetStreamsBlockedFrameSize(version, frame.streams_blocked_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case PATH_RESPONSE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetPathResponseFrameSize(*frame.path_response_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetPathResponseFrameSize(frame.path_response_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case PATH_CHALLENGE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetPathChallengeFrameSize(*frame.path_challenge_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetPathChallengeFrameSize(frame.path_challenge_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return GetStopSendingFrameSize(*frame.stop_sending_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return GetStopSendingFrameSize(frame.stop_sending_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case HANDSHAKE_DONE_FRAME:
       // HANDSHAKE_DONE has no payload.
       return kQuicFrameTypeSize;
@@ -785,15 +813,27 @@ size_t QuicFramer::GetSerializedFrameLength(
     return 0;
   }
   if (frame.type == PADDING_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (frame.padding_frame->num_padding_bytes == -1) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (frame.padding_frame.num_padding_bytes == -1) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       // Full padding to the end of the packet.
       return free_bytes;
     } else {
       // Lite padding.
       return free_bytes <
+#if defined(__CHERI_PURE_CAPABILITY__)
+                     static_cast<size_t>(frame.padding_frame->num_padding_bytes)
+#else // defined(__CHERI_PURE_CAPABILITY__)
                      static_cast<size_t>(frame.padding_frame.num_padding_bytes)
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                  ? free_bytes
+#if defined(__CHERI_PURE_CAPABILITY__)
+                 : frame.padding_frame->num_padding_bytes;
+#else // defined(__CHERI_PURE_CAPABILITY__)
                  : frame.padding_frame.num_padding_bytes;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     }
   }
 
@@ -899,15 +939,27 @@ size_t QuicFramer::BuildDataPacket(const QuicPacketHeader& header,
 
     switch (frame.type) {
       case PADDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendPaddingFrame(*frame.padding_frame, &writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendPaddingFrame(frame.padding_frame, &writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_18)
               << "AppendPaddingFrame of "
+#if defined(__CHERI_PURE_CAPABILITY__)
+              << frame.padding_frame->num_padding_bytes << " failed";
+#else // defined(__CHERI_PURE_CAPABILITY__)
               << frame.padding_frame.num_padding_bytes << " failed";
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           return 0;
         }
         break;
       case STREAM_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendStreamFrame(*frame.stream_frame, last_frame_in_packet,
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendStreamFrame(frame.stream_frame, last_frame_in_packet,
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                                &writer)) {
           QUIC_BUG(quic_bug_10850_19) << "AppendStreamFrame failed";
           return 0;
@@ -946,13 +998,21 @@ size_t QuicFramer::BuildDataPacket(const QuicPacketHeader& header,
         }
         break;
       case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendWindowUpdateFrame(*frame.window_update_frame, &writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendWindowUpdateFrame(frame.window_update_frame, &writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_25) << "AppendWindowUpdateFrame failed";
           return 0;
         }
         break;
       case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendBlockedFrame(*frame.blocked_frame, &writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendBlockedFrame(frame.blocked_frame, &writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_26) << "AppendBlockedFrame failed";
           return 0;
         }
@@ -1040,15 +1100,27 @@ size_t QuicFramer::AppendIetfFrames(const QuicFrames& frames,
 
     switch (frame.type) {
       case PADDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendPaddingFrame(*frame.padding_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendPaddingFrame(frame.padding_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_31) << "AppendPaddingFrame of "
+#if defined(__CHERI_PURE_CAPABILITY__)
+                                      << frame.padding_frame->num_padding_bytes
+#else // defined(__CHERI_PURE_CAPABILITY__)
                                       << frame.padding_frame.num_padding_bytes
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                                       << " failed: " << detailed_error();
           return 0;
         }
         break;
       case STREAM_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendStreamFrame(*frame.stream_frame, last_frame_in_packet,
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendStreamFrame(frame.stream_frame, last_frame_in_packet,
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                                writer)) {
           QUIC_BUG(quic_bug_10850_32)
               << "AppendStreamFrame " << frame.stream_frame
@@ -1098,15 +1170,27 @@ size_t QuicFramer::AppendIetfFrames(const QuicFrames& frames,
       case WINDOW_UPDATE_FRAME:
         // Depending on whether there is a stream ID or not, will be either a
         // MAX STREAM DATA frame or a MAX DATA frame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (frame.window_update_frame->stream_id ==
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (frame.window_update_frame.stream_id ==
+#endif // defined(__CHERI_PURE_CAPABILITY__)
             QuicUtils::GetInvalidStreamId(transport_version())) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+          if (!AppendMaxDataFrame(*frame.window_update_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
           if (!AppendMaxDataFrame(frame.window_update_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
             QUIC_BUG(quic_bug_10850_38)
                 << "AppendMaxDataFrame failed: " << detailed_error();
             return 0;
           }
         } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+          if (!AppendMaxStreamDataFrame(*frame.window_update_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
           if (!AppendMaxStreamDataFrame(frame.window_update_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
             QUIC_BUG(quic_bug_10850_39)
                 << "AppendMaxStreamDataFrame failed: " << detailed_error();
             return 0;
@@ -1114,21 +1198,33 @@ size_t QuicFramer::AppendIetfFrames(const QuicFrames& frames,
         }
         break;
       case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendBlockedFrame(*frame.blocked_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendBlockedFrame(frame.blocked_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_40)
               << "AppendBlockedFrame failed: " << detailed_error();
           return 0;
         }
         break;
       case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendMaxStreamsFrame(*frame.max_streams_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendMaxStreamsFrame(frame.max_streams_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_41)
               << "AppendMaxStreamsFrame failed: " << detailed_error();
           return 0;
         }
         break;
       case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendStreamsBlockedFrame(*frame.streams_blocked_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendStreamsBlockedFrame(frame.streams_blocked_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_42)
               << "AppendStreamsBlockedFrame failed: " << detailed_error();
           return 0;
@@ -1158,21 +1254,33 @@ size_t QuicFramer::AppendIetfFrames(const QuicFrames& frames,
         }
         break;
       case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendStopSendingFrame(*frame.stop_sending_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendStopSendingFrame(frame.stop_sending_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_46)
               << "AppendStopSendingFrame failed: " << detailed_error();
           return 0;
         }
         break;
       case PATH_CHALLENGE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendPathChallengeFrame(*frame.path_challenge_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendPathChallengeFrame(frame.path_challenge_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_47)
               << "AppendPathChallengeFrame failed: " << detailed_error();
           return 0;
         }
         break;
       case PATH_RESPONSE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        if (!AppendPathResponseFrame(*frame.path_response_frame, writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         if (!AppendPathResponseFrame(frame.path_response_frame, writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QUIC_BUG(quic_bug_10850_48)
               << "AppendPathResponseFrame failed: " << detailed_error();
           return 0;
@@ -4765,10 +4873,18 @@ size_t QuicFramer::ComputeFrameLength(
   switch (frame.type) {
     case STREAM_FRAME:
       return GetMinStreamFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                 version_.transport_version, frame.stream_frame->stream_id,
+                 frame.stream_frame->offset, last_frame_in_packet,
+                 frame.stream_frame->data_length) +
+             frame.stream_frame->data_length;
+#else // defined(__CHERI_PURE_CAPABILITY__)
+             frame.stream_frame.data_length;
                  version_.transport_version, frame.stream_frame.stream_id,
                  frame.stream_frame.offset, last_frame_in_packet,
                  frame.stream_frame.data_length) +
              frame.stream_frame.data_length;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case CRYPTO_FRAME:
       return GetMinCryptoFrameSize(frame.crypto_frame->offset,
                                    frame.crypto_frame->data_length) +
@@ -4803,7 +4919,11 @@ bool QuicFramer::AppendTypeByte(const QuicFrame& frame,
   switch (frame.type) {
     case STREAM_FRAME:
       type_byte =
+#if defined(__CHERI_PURE_CAPABILITY__)
+          GetStreamFrameTypeByte(*frame.stream_frame, last_frame_in_packet);
+#else // defined(__CHERI_PURE_CAPABILITY__)
           GetStreamFrameTypeByte(frame.stream_frame, last_frame_in_packet);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case ACK_FRAME:
       return true;
@@ -4886,7 +5006,11 @@ bool QuicFramer::AppendIetfFrameType(const QuicFrame& frame,
     case WINDOW_UPDATE_FRAME:
       // Depending on whether there is a stream ID or not, will be either a
       // MAX_STREAM_DATA frame or a MAX_DATA frame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+      if (frame.window_update_frame->stream_id ==
+#else // defined(__CHERI_PURE_CAPABILITY__)
       if (frame.window_update_frame.stream_id ==
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QuicUtils::GetInvalidStreamId(transport_version())) {
         type_byte = IETF_MAX_DATA;
       } else {
@@ -4894,7 +5018,11 @@ bool QuicFramer::AppendIetfFrameType(const QuicFrame& frame,
       }
       break;
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      if (frame.blocked_frame->stream_id ==
+#else // defined(__CHERI_PURE_CAPABILITY__)
       if (frame.blocked_frame.stream_id ==
+#endif // defined(__CHERI_PURE_CAPABILITY__)
           QuicUtils::GetInvalidStreamId(transport_version())) {
         type_byte = IETF_DATA_BLOCKED;
       } else {
@@ -4910,7 +5038,11 @@ bool QuicFramer::AppendIetfFrameType(const QuicFrame& frame,
       break;
     case STREAM_FRAME:
       type_byte =
+#if defined(__CHERI_PURE_CAPABILITY__)
+          GetStreamFrameTypeByte(*frame.stream_frame, last_frame_in_packet);
+#else // defined(__CHERI_PURE_CAPABILITY__)
           GetStreamFrameTypeByte(frame.stream_frame, last_frame_in_packet);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case ACK_FRAME:
       // Do nothing here, AppendIetfAckFrameAndTypeByte() will put the type byte
@@ -4930,14 +5062,22 @@ bool QuicFramer::AppendIetfFrameType(const QuicFrame& frame,
       type_byte = IETF_NEW_TOKEN;
       break;
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      if (frame.max_streams_frame->unidirectional) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
       if (frame.max_streams_frame.unidirectional) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
         type_byte = IETF_MAX_STREAMS_UNIDIRECTIONAL;
       } else {
         type_byte = IETF_MAX_STREAMS_BIDIRECTIONAL;
       }
       break;
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      if (frame.streams_blocked_frame->unidirectional) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
       if (frame.streams_blocked_frame.unidirectional) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
         type_byte = IETF_STREAMS_BLOCKED_UNIDIRECTIONAL;
       } else {
         type_byte = IETF_STREAMS_BLOCKED_BIDIRECTIONAL;

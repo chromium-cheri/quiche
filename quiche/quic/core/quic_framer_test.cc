@@ -1729,7 +1729,11 @@ TEST_P(QuicFramerTest, PacketNumberDecreasesThenIncreases) {
   header.version_flag = false;
   header.packet_number = kPacketNumber - 2;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
   ASSERT_TRUE(data != nullptr);
@@ -5199,7 +5203,11 @@ TEST_P(QuicFramerTest, BuildPaddingFramePacket) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[kMaxOutgoingPacketSize] = {
@@ -5259,8 +5267,13 @@ TEST_P(QuicFramerTest, BuildStreamFramePacketWithNewPaddingFrame) {
   QuicStreamFrame stream_frame(kStreamId, true, kStreamOffset,
                                absl::string_view("hello world!"));
   QuicPaddingFrame padding_frame(2);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&padding_frame), QuicFrame(&stream_frame),
+                       QuicFrame(&padding_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(padding_frame), QuicFrame(stream_frame),
                        QuicFrame(padding_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -5342,7 +5355,11 @@ TEST_P(QuicFramerTest, Build4ByteSequenceNumberPaddingFramePacket) {
   header.packet_number_length = PACKET_4BYTE_PACKET_NUMBER;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[kMaxOutgoingPacketSize] = {
@@ -5401,7 +5418,11 @@ TEST_P(QuicFramerTest, Build2ByteSequenceNumberPaddingFramePacket) {
   header.packet_number_length = PACKET_2BYTE_PACKET_NUMBER;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[kMaxOutgoingPacketSize] = {
@@ -5460,7 +5481,11 @@ TEST_P(QuicFramerTest, Build1ByteSequenceNumberPaddingFramePacket) {
   header.packet_number_length = PACKET_1BYTE_PACKET_NUMBER;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[kMaxOutgoingPacketSize] = {
@@ -5524,7 +5549,11 @@ TEST_P(QuicFramerTest, BuildStreamFramePacket) {
   QuicStreamFrame stream_frame(kStreamId, true, kStreamOffset,
                                absl::string_view("hello world!"));
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&stream_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(stream_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -5596,7 +5625,11 @@ TEST_P(QuicFramerTest, BuildStreamFramePacketWithVersionFlag) {
 
   QuicStreamFrame stream_frame(kStreamId, true, kStreamOffset,
                                absl::string_view("hello world!"));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&stream_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(stream_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -7755,7 +7788,11 @@ TEST_P(QuicFramerTest, BuildWindowUpdatePacket) {
   window_update_frame.stream_id = kStreamId;
   window_update_frame.max_data = 0x1122334455667788;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&window_update_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(window_update_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -7823,7 +7860,11 @@ TEST_P(QuicFramerTest, BuildMaxStreamDataPacket) {
   window_update_frame.stream_id = kStreamId;
   window_update_frame.max_data = 0x1122334455667788;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&window_update_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(window_update_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -7869,7 +7910,11 @@ TEST_P(QuicFramerTest, BuildMaxDataPacket) {
       QuicUtils::GetInvalidStreamId(framer_.transport_version());
   window_update_frame.max_data = 0x1122334455667788;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&window_update_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(window_update_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -7916,7 +7961,11 @@ TEST_P(QuicFramerTest, BuildBlockedPacket) {
   }
   blocked_frame.offset = kStreamOffset;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&blocked_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(blocked_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -7970,7 +8019,11 @@ TEST_P(QuicFramerTest, BuildPingPacket) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -8018,7 +8071,11 @@ TEST_P(QuicFramerTest, BuildHandshakeDonePacket) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicHandshakeDoneFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicHandshakeDoneFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -8168,7 +8225,11 @@ TEST_P(QuicFramerTest, BuildMtuDiscoveryPacket) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicMtuDiscoveryFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicMtuDiscoveryFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet[] = {
@@ -8741,7 +8802,11 @@ TEST_P(QuicFramerTest, CleanTruncation) {
   // Create a packet with just the ack.
   QuicFrames frames = {QuicFrame(&ack_frame)};
   if (framer_.version().HasHeaderProtection()) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPaddingFrame(12)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(QuicPaddingFrame(12)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> raw_ack_packet(BuildDataPacket(header, frames));
@@ -8763,7 +8828,11 @@ TEST_P(QuicFramerTest, CleanTruncation) {
   frames.clear();
   frames.push_back(QuicFrame(visitor_.ack_frames_[0].get()));
   if (framer_.version().HasHeaderProtection()) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(visitor_.padding_frames_[0].get()));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(*visitor_.padding_frames_[0].get()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
 
   size_t original_raw_length = raw_ack_packet->length();
@@ -9025,7 +9094,11 @@ TEST_P(QuicFramerTest, BuildIetfBlockedPacket) {
   QuicBlockedFrame frame;
   frame.stream_id = QuicUtils::GetInvalidStreamId(framer_.transport_version());
   frame.offset = kStreamOffset;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -9111,7 +9184,11 @@ TEST_P(QuicFramerTest, BuildIetfStreamBlockedPacket) {
   QuicBlockedFrame frame;
   frame.stream_id = kStreamId;
   frame.offset = kStreamOffset;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -9766,7 +9843,11 @@ TEST_P(QuicFramerTest, BuildBiDiStreamsBlockedPacket) {
   frame.stream_count = 3;
   frame.unidirectional = false;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -9808,7 +9889,11 @@ TEST_P(QuicFramerTest, BuildUniStreamsBlockedPacket) {
   frame.stream_count = 3;
   frame.unidirectional = true;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -9850,7 +9935,11 @@ TEST_P(QuicFramerTest, BuildBiDiMaxStreamsPacket) {
   frame.stream_count = 3;
   frame.unidirectional = false;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -9895,7 +9984,11 @@ TEST_P(QuicFramerTest, BuildUniDiMaxStreamsPacket) {
   frame.stream_count = 3;
   frame.unidirectional = true;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -10350,7 +10443,11 @@ TEST_P(QuicFramerTest, BuildIetfStopSendingPacket) {
   frame.error_code = QUIC_STREAM_ENCODER_STREAM_ERROR;
   frame.ietf_error_code =
       static_cast<uint64_t>(QuicHttpQpackErrorCode::ENCODER_STREAM_ERROR);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -10435,7 +10532,11 @@ TEST_P(QuicFramerTest, BuildIetfPathChallengePacket) {
 
   QuicPathChallengeFrame frame;
   frame.data_buffer = QuicPathFrameBuffer({{0, 1, 2, 3, 4, 5, 6, 7}});
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -10518,7 +10619,11 @@ TEST_P(QuicFramerTest, BuildIetfPathResponsePacket) {
 
   QuicPathResponseFrame frame;
   frame.data_buffer = QuicPathFrameBuffer({{0, 1, 2, 3, 4, 5, 6, 7}});
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(&frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // clang-format off
   unsigned char packet_ietf[] = {
@@ -10571,13 +10676,21 @@ TEST_P(QuicFramerTest, GetRetransmittableControlFrameSize) {
   EXPECT_EQ(QuicFramer::GetWindowUpdateFrameSize(framer_.transport_version(),
                                                  window_update),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&window_update)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(window_update)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicBlockedFrame blocked(4, 3, 1024);
   EXPECT_EQ(
       QuicFramer::GetBlockedFrameSize(framer_.transport_version(), blocked),
       QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          framer_.transport_version(), QuicFrame(&blocked)));
+#else   // !__CHERI_PURE_CAPABILITY__
           framer_.transport_version(), QuicFrame(blocked)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Following frames are IETF QUIC frames only.
   if (!VersionHasIetfQuicFrames(framer_.transport_version())) {
@@ -10594,30 +10707,50 @@ TEST_P(QuicFramerTest, GetRetransmittableControlFrameSize) {
   EXPECT_EQ(QuicFramer::GetMaxStreamsFrameSize(framer_.transport_version(),
                                                max_streams),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&max_streams)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(max_streams)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicStreamsBlockedFrame streams_blocked(7, 3, /*unidirectional=*/false);
   EXPECT_EQ(QuicFramer::GetStreamsBlockedFrameSize(framer_.transport_version(),
                                                    streams_blocked),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&streams_blocked)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(streams_blocked)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicPathFrameBuffer buffer = {
       {0x80, 0x91, 0xa2, 0xb3, 0xc4, 0xd5, 0xe5, 0xf7}};
   QuicPathResponseFrame path_response_frame(8, buffer);
   EXPECT_EQ(QuicFramer::GetPathResponseFrameSize(path_response_frame),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&path_response_frame)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(path_response_frame)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicPathChallengeFrame path_challenge_frame(9, buffer);
   EXPECT_EQ(QuicFramer::GetPathChallengeFrameSize(path_challenge_frame),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&path_challenge_frame)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(path_challenge_frame)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicStopSendingFrame stop_sending_frame(10, 3, QUIC_STREAM_CANCELLED);
   EXPECT_EQ(QuicFramer::GetStopSendingFrameSize(stop_sending_frame),
             QuicFramer::GetRetransmittableControlFrameSize(
+#if defined(__CHERI_PURE_CAPABILITY__)
+                framer_.transport_version(), QuicFrame(&stop_sending_frame)));
+#else   // !__CHERI_PURE_CAPABILITY__
                 framer_.transport_version(), QuicFrame(stop_sending_frame)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 // A set of tests to ensure that bad frame-type encodings
@@ -12635,8 +12768,13 @@ TEST_P(QuicFramerTest, CoalescedPacketWithZeroesRoundTrip) {
   header.long_packet_type = INITIAL;
   header.length_length = quiche::VARIABLE_LENGTH_INTEGER_LENGTH_2;
   header.retry_token_length_length = quiche::VARIABLE_LENGTH_INTEGER_LENGTH_1;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPingFrame()),
+                       QuicFrame(new QuicPaddingFrame(3))};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPingFrame()),
                        QuicFrame(QuicPaddingFrame(3))};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
   ASSERT_NE(nullptr, data);
@@ -13550,7 +13688,11 @@ TEST_P(QuicFramerTest, KeyUpdate) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
@@ -13627,7 +13769,11 @@ TEST_P(QuicFramerTest, KeyUpdateOldPacketAfterUpdate) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process packet N with phase 0.
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
@@ -13689,7 +13835,11 @@ TEST_P(QuicFramerTest, KeyUpdateOldPacketAfterDiscardPreviousOneRttKeys) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process packet N with phase 0.
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
@@ -13754,7 +13904,11 @@ TEST_P(QuicFramerTest, KeyUpdatePacketsOutOfOrder) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process packet N with phase 0.
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
@@ -13816,7 +13970,11 @@ TEST_P(QuicFramerTest, KeyUpdateWrongKey) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
@@ -13912,7 +14070,11 @@ TEST_P(QuicFramerTest, KeyUpdateReceivedWhenNotEnabled) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
@@ -13957,7 +14119,11 @@ TEST_P(QuicFramerTest, KeyUpdateLocallyInitiated) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process packet N with phase 1.
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
@@ -14032,7 +14198,11 @@ TEST_P(QuicFramerTest, KeyUpdateLocallyInitiatedReceivedOldPacket) {
   header.version_flag = false;
   header.packet_number = kPacketNumber;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process packet N with phase 0. (Receiving packet from previous phase
   // after locally initiated key update, but before any packet from new phase
@@ -14102,7 +14272,11 @@ TEST_P(QuicFramerTest, KeyUpdateOnFirstReceivedPacket) {
   header.version_flag = false;
   header.packet_number = QuicPacketNumber(123);
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrames frames = {QuicFrame(new QuicPaddingFrame())};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames = {QuicFrame(QuicPaddingFrame())};
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
   std::unique_ptr<QuicPacket> data(BuildDataPacket(header, frames));
@@ -14244,7 +14418,11 @@ TEST_P(QuicFramerTest, ReportEcnCountsIfPresent) {
     } else {
       ack_frame.ecn_counters = absl::nullopt;
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    QuicFrames frames = {QuicFrame(&padding_frame), QuicFrame(&ack_frame)};
+#else   // !__CHERI_PURE_CAPABILITY__
     QuicFrames frames = {QuicFrame(padding_frame), QuicFrame(&ack_frame)};
+#endif  // !__CHERI_PURE_CAPABILITY__
     // Build an ACK packet.
     QuicFramerPeer::SetPerspective(&framer_, Perspective::IS_CLIENT);
     std::unique_ptr<QuicPacket> raw_ack_packet(BuildDataPacket(header, frames));

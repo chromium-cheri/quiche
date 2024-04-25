@@ -930,7 +930,11 @@ QuicEncryptedPacket* ConstructEncryptedPacket(
   }
   if (!QuicVersionUsesCryptoFrames(version.transport_version)) {
     QuicFrame frame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        new QuicStreamFrame(QuicUtils::GetCryptoStreamId(version.transport_version),
+#else   // !__CHERI_PURE_CAPABILITY__
         QuicStreamFrame(QuicUtils::GetCryptoStreamId(version.transport_version),
+#endif  // !__CHERI_PURE_CAPABILITY__
                         false, 0, absl::string_view(data)));
     frames.push_back(frame);
   } else {
@@ -938,7 +942,11 @@ QuicEncryptedPacket* ConstructEncryptedPacket(
     frames.push_back(frame);
   }
   if (full_padding) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   } else {
     // We need a minimum number of bytes of encrypted payload. This will
     // guarantee that we have at least that much. (It ignores the overhead of
@@ -947,7 +955,11 @@ QuicEncryptedPacket* ConstructEncryptedPacket(
         version, packet_number_length);
     if (data.length() < min_plaintext_size) {
       size_t padding_length = min_plaintext_size - data.length();
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(new QuicPaddingFrame(padding_length)));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(QuicPaddingFrame(padding_length)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
   }
 
@@ -985,8 +997,13 @@ std::unique_ptr<QuicEncryptedPacket> GetUndecryptableEarlyPacket(
   }
 
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPingFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPingFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicFramer framer({version}, QuicTime::Zero(), Perspective::IS_CLIENT,
                     kQuicDefaultConnectionIdLength);
   framer.SetInitialObfuscators(server_connection_id);
@@ -1037,7 +1054,11 @@ QuicEncryptedPacket* ConstructMisFramedEncryptedPacket(
     header.retry_token_length_length = quiche::VARIABLE_LENGTH_INTEGER_LENGTH_1;
     header.length_length = quiche::VARIABLE_LENGTH_INTEGER_LENGTH_2;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(new QuicStreamFrame(1, false, 0, absl::string_view(data)));
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame(QuicStreamFrame(1, false, 0, absl::string_view(data)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicFrames frames;
   frames.push_back(frame);
   QuicFramer framer({version}, QuicTime::Zero(), perspective,
@@ -1053,7 +1074,11 @@ QuicEncryptedPacket* ConstructMisFramedEncryptedPacket(
   // framing, so it overpads slightly.)
   if (data.length() < 7) {
     size_t padding_length = 7 - data.length();
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPaddingFrame(padding_length)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(QuicPaddingFrame(padding_length)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
 
   std::unique_ptr<QuicPacket> packet(

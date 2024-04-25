@@ -17,26 +17,56 @@ namespace quic {
 
 QuicFrame::QuicFrame() {}
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicPaddingFrame* padding_frame)
+    : type(PADDING_FRAME), padding_frame(padding_frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicPaddingFrame padding_frame)
     : padding_frame(padding_frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicStreamFrame *stream_frame)
+    : type(STREAM_FRAME), stream_frame(stream_frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicStreamFrame stream_frame)
     : stream_frame(stream_frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicHandshakeDoneFrame *handshake_done_frame)
+    : type(HANDSHAKE_DONE_FRAME), handshake_done_frame(handshake_done_frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicHandshakeDoneFrame handshake_done_frame)
     : handshake_done_frame(handshake_done_frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
 QuicFrame::QuicFrame(QuicCryptoFrame* crypto_frame)
     : type(CRYPTO_FRAME), crypto_frame(crypto_frame) {}
 
 QuicFrame::QuicFrame(QuicAckFrame* frame) : type(ACK_FRAME), ack_frame(frame) {}
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicMtuDiscoveryFrame *frame)
+    : type(MTU_DISCOVERY_FRAME), mtu_discovery_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicMtuDiscoveryFrame frame)
     : mtu_discovery_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicStopWaitingFrame *frame)
+    : type(STOP_WAITING_FRAME), stop_waiting_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicStopWaitingFrame frame) : stop_waiting_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicPingFrame *frame)
+    : type(PING_FRAME), ping_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicPingFrame frame) : ping_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
 QuicFrame::QuicFrame(QuicRstStreamFrame* frame)
     : type(RST_STREAM_FRAME), rst_stream_frame(frame) {}
@@ -47,10 +77,20 @@ QuicFrame::QuicFrame(QuicConnectionCloseFrame* frame)
 QuicFrame::QuicFrame(QuicGoAwayFrame* frame)
     : type(GOAWAY_FRAME), goaway_frame(frame) {}
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicWindowUpdateFrame *frame)
+    : type(WINDOW_UPDATE_FRAME), window_update_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicWindowUpdateFrame frame)
     : window_update_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicBlockedFrame *frame)
+    : type(BLOCKED_FRAME), blocked_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicBlockedFrame frame) : blocked_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
 QuicFrame::QuicFrame(QuicNewConnectionIdFrame* frame)
     : type(NEW_CONNECTION_ID_FRAME), new_connection_id_frame(frame) {}
@@ -58,18 +98,43 @@ QuicFrame::QuicFrame(QuicNewConnectionIdFrame* frame)
 QuicFrame::QuicFrame(QuicRetireConnectionIdFrame* frame)
     : type(RETIRE_CONNECTION_ID_FRAME), retire_connection_id_frame(frame) {}
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicMaxStreamsFrame *frame)
+    : type(MAX_STREAMS_FRAME), max_streams_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicMaxStreamsFrame frame) : max_streams_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicStreamsBlockedFrame *frame)
+    : type(STREAMS_BLOCKED_FRAME), streams_blocked_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicStreamsBlockedFrame frame)
     : streams_blocked_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicPathResponseFrame *frame)
+    : type(PATH_RESPONSE_FRAME), path_response_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicPathResponseFrame frame)
     : path_response_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicPathChallengeFrame *frame)
+    : type(PATH_CHALLENGE_FRAME), path_challenge_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicPathChallengeFrame frame)
     : path_challenge_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicFrame::QuicFrame(QuicStopSendingFrame *frame)
+    : type(STOP_SENDING_FRAME), stop_sending_frame(frame) {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicFrame::QuicFrame(QuicStopSendingFrame frame) : stop_sending_frame(frame) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
 QuicFrame::QuicFrame(QuicMessageFrame* frame)
     : type(MESSAGE_FRAME), message_frame(frame) {}
@@ -156,7 +221,11 @@ void DeleteFrame(QuicFrame* frame) {
 void RemoveFramesForStream(QuicFrames* frames, QuicStreamId stream_id) {
   auto it = frames->begin();
   while (it != frames->end()) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (it->type != STREAM_FRAME || it->stream_frame->stream_id != stream_id) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (it->type != STREAM_FRAME || it->stream_frame.stream_id != stream_id) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       ++it;
       continue;
     }
@@ -192,23 +261,51 @@ QuicControlFrameId GetControlFrameId(const QuicFrame& frame) {
     case GOAWAY_FRAME:
       return frame.goaway_frame->control_frame_id;
     case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.window_update_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.window_update_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.blocked_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.blocked_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.streams_blocked_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.streams_blocked_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.max_streams_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.max_streams_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case PING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.ping_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.ping_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.stop_sending_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.stop_sending_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case NEW_CONNECTION_ID_FRAME:
       return frame.new_connection_id_frame->control_frame_id;
     case RETIRE_CONNECTION_ID_FRAME:
       return frame.retire_connection_id_frame->control_frame_id;
     case HANDSHAKE_DONE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      return frame.handshake_done_frame->control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       return frame.handshake_done_frame.control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     case ACK_FREQUENCY_FRAME:
       return frame.ack_frequency_frame->control_frame_id;
     case NEW_TOKEN_FRAME:
@@ -227,22 +324,46 @@ void SetControlFrameId(QuicControlFrameId control_frame_id, QuicFrame* frame) {
       frame->goaway_frame->control_frame_id = control_frame_id;
       return;
     case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->window_update_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->window_update_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->blocked_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->blocked_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case PING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->ping_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->ping_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->streams_blocked_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->streams_blocked_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->max_streams_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->max_streams_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->stop_sending_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->stop_sending_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case NEW_CONNECTION_ID_FRAME:
       frame->new_connection_id_frame->control_frame_id = control_frame_id;
@@ -251,7 +372,11 @@ void SetControlFrameId(QuicControlFrameId control_frame_id, QuicFrame* frame) {
       frame->retire_connection_id_frame->control_frame_id = control_frame_id;
       return;
     case HANDSHAKE_DONE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frame->handshake_done_frame->control_frame_id = control_frame_id;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       frame->handshake_done_frame.control_frame_id = control_frame_id;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return;
     case ACK_FREQUENCY_FRAME:
       frame->ack_frequency_frame->control_frame_id = control_frame_id;
@@ -275,16 +400,32 @@ QuicFrame CopyRetransmittableControlFrame(const QuicFrame& frame) {
       copy = QuicFrame(new QuicGoAwayFrame(*frame.goaway_frame));
       break;
     case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicWindowUpdateFrame(*frame.window_update_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicWindowUpdateFrame(frame.window_update_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicBlockedFrame(*frame.blocked_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicBlockedFrame(frame.blocked_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case PING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPingFrame(frame.ping_frame->control_frame_id));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPingFrame(frame.ping_frame.control_frame_id));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStopSendingFrame(*frame.stop_sending_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStopSendingFrame(frame.stop_sending_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case NEW_CONNECTION_ID_FRAME:
       copy = QuicFrame(
@@ -295,14 +436,26 @@ QuicFrame CopyRetransmittableControlFrame(const QuicFrame& frame) {
           new QuicRetireConnectionIdFrame(*frame.retire_connection_id_frame));
       break;
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStreamsBlockedFrame(*frame.streams_blocked_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStreamsBlockedFrame(frame.streams_blocked_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicMaxStreamsFrame(*frame.max_streams_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicMaxStreamsFrame(frame.max_streams_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case HANDSHAKE_DONE_FRAME:
       copy = QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          new QuicHandshakeDoneFrame(frame.handshake_done_frame->control_frame_id));
+#else // defined(__CHERI_PURE_CAPABILITY__)
           QuicHandshakeDoneFrame(frame.handshake_done_frame.control_frame_id));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case ACK_FREQUENCY_FRAME:
       copy = QuicFrame(new QuicAckFrequencyFrame(*frame.ack_frequency_frame));
@@ -313,7 +466,11 @@ QuicFrame CopyRetransmittableControlFrame(const QuicFrame& frame) {
     default:
       QUIC_BUG(quic_bug_10533_1)
           << "Try to copy a non-retransmittable control frame: " << frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPingFrame(kInvalidControlFrameId));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPingFrame(kInvalidControlFrameId));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
   }
   return copy;
@@ -324,7 +481,11 @@ QuicFrame CopyQuicFrame(quiche::QuicheBufferAllocator* allocator,
   QuicFrame copy;
   switch (frame.type) {
     case PADDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPaddingFrame(*frame.padding_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPaddingFrame(frame.padding_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case RST_STREAM_FRAME:
       copy = QuicFrame(new QuicRstStreamFrame(*frame.rst_stream_frame));
@@ -337,47 +498,91 @@ QuicFrame CopyQuicFrame(quiche::QuicheBufferAllocator* allocator,
       copy = QuicFrame(new QuicGoAwayFrame(*frame.goaway_frame));
       break;
     case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicWindowUpdateFrame(*frame.window_update_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicWindowUpdateFrame(frame.window_update_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicBlockedFrame(*frame.blocked_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicBlockedFrame(frame.blocked_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case STOP_WAITING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStopWaitingFrame(*frame.stop_waiting_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStopWaitingFrame(frame.stop_waiting_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case PING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPingFrame(frame.ping_frame->control_frame_id));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPingFrame(frame.ping_frame.control_frame_id));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case CRYPTO_FRAME:
       copy = QuicFrame(new QuicCryptoFrame(*frame.crypto_frame));
       break;
     case STREAM_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStreamFrame(*frame.stream_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStreamFrame(frame.stream_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case ACK_FRAME:
       copy = QuicFrame(new QuicAckFrame(*frame.ack_frame));
       break;
     case MTU_DISCOVERY_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicMtuDiscoveryFrame(*frame.mtu_discovery_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicMtuDiscoveryFrame(frame.mtu_discovery_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case NEW_CONNECTION_ID_FRAME:
       copy = QuicFrame(
           new QuicNewConnectionIdFrame(*frame.new_connection_id_frame));
       break;
     case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicMaxStreamsFrame(*frame.max_streams_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicMaxStreamsFrame(frame.max_streams_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStreamsBlockedFrame(*frame.streams_blocked_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStreamsBlockedFrame(frame.streams_blocked_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case PATH_RESPONSE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPathResponseFrame(*frame.path_response_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPathResponseFrame(frame.path_response_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case PATH_CHALLENGE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPathChallengeFrame(*frame.path_challenge_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPathChallengeFrame(frame.path_challenge_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicStopSendingFrame(*frame.stop_sending_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicStopSendingFrame(frame.stop_sending_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case MESSAGE_FRAME:
       copy = QuicFrame(new QuicMessageFrame(frame.message_frame->message_id));
@@ -399,14 +604,22 @@ QuicFrame CopyQuicFrame(quiche::QuicheBufferAllocator* allocator,
       break;
     case HANDSHAKE_DONE_FRAME:
       copy = QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          new QuicHandshakeDoneFrame(frame.handshake_done_frame->control_frame_id));
+#else // defined(__CHERI_PURE_CAPABILITY__)
           QuicHandshakeDoneFrame(frame.handshake_done_frame.control_frame_id));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
     case ACK_FREQUENCY_FRAME:
       copy = QuicFrame(new QuicAckFrequencyFrame(*frame.ack_frequency_frame));
       break;
     default:
       QUIC_BUG(quic_bug_10533_2) << "Cannot copy frame: " << frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+      copy = QuicFrame(new QuicPingFrame(kInvalidControlFrameId));
+#else // defined(__CHERI_PURE_CAPABILITY__)
       copy = QuicFrame(QuicPingFrame(kInvalidControlFrameId));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       break;
   }
   return copy;

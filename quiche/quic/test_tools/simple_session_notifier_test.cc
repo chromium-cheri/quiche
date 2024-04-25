@@ -161,7 +161,11 @@ TEST_F(SimpleSessionNotifierTest, NeuterUnencryptedData) {
   QuicStreamFrame stream_frame(
       QuicUtils::GetCryptoStreamId(connection_.transport_version()), false,
       1024, 1024);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  notifier_.OnFrameAcked(QuicFrame(&stream_frame), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   notifier_.OnFrameAcked(QuicFrame(stream_frame), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                          QuicTime::Zero());
   EXPECT_TRUE(notifier_.StreamIsWaitingForAcks(
       QuicUtils::GetCryptoStreamId(connection_.transport_version())));
@@ -216,8 +220,13 @@ TEST_F(SimpleSessionNotifierTest, OnCanWrite) {
       QuicUtils::GetCryptoStreamId(connection_.transport_version()), false, 500,
       1000);
   QuicStreamFrame frame2(3, false, 0, 512);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  notifier_.OnFrameLost(QuicFrame(&frame1));
+  notifier_.OnFrameLost(QuicFrame(&frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   notifier_.OnFrameLost(QuicFrame(frame1));
   notifier_.OnFrameLost(QuicFrame(frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Connection becomes writable.
   // Lost crypto data gets retransmitted as [500, 1024) and [1024, 1500), as
@@ -288,7 +297,11 @@ TEST_F(SimpleSessionNotifierTest, OnCanWriteCryptoFrames) {
   QuicStreamFrame stream3_frame(3, false, 0, 512);
   notifier_.OnFrameLost(QuicFrame(&crypto_frame1));
   notifier_.OnFrameLost(QuicFrame(&crypto_frame2));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  notifier_.OnFrameLost(QuicFrame(&stream3_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   notifier_.OnFrameLost(QuicFrame(stream3_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Connection becomes writable.
   // Lost crypto data gets retransmitted as [500, 1024) and [1024, 1500), as
@@ -335,18 +348,39 @@ TEST_F(SimpleSessionNotifierTest, RetransmitFrames) {
   // Ack stream 3 [3, 7), and stream 5 [8, 10).
   QuicStreamFrame ack_frame1(3, false, 3, 4);
   QuicStreamFrame ack_frame2(5, false, 8, 2);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  notifier_.OnFrameAcked(QuicFrame(&ack_frame1), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   notifier_.OnFrameAcked(QuicFrame(ack_frame1), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                          QuicTime::Zero());
+#if defined(__CHERI_PURE_CAPABILITY__)
+  notifier_.OnFrameAcked(QuicFrame(&ack_frame2), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   notifier_.OnFrameAcked(QuicFrame(ack_frame2), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                          QuicTime::Zero());
   EXPECT_FALSE(notifier_.WillingToWrite());
 
   // Force to send.
   QuicRstStreamFrame rst_stream(1, 5, QUIC_STREAM_NO_ERROR, 10);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(&rst_stream));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
+  frames.push_back(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
   // stream 5 data [0, 8), fin only are retransmitted.
   EXPECT_CALL(connection_, SendStreamData(5, 8, 0, NO_FIN))
       .WillOnce(Return(QuicConsumedData(8, false)));

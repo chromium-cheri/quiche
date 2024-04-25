@@ -6762,7 +6762,11 @@ void QuicConnection::UpdatePeerAddress(QuicSocketAddress peer_address) {
 
 void QuicConnection::SendPingAtLevel(EncryptionLevel level) {
   ScopedEncryptionLevelContext context(this, level);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  SendControlFrame(QuicFrame(new QuicPingFrame()));
+#else // defined(__CHERI_PURE_CAPABNILITY__)
   SendControlFrame(QuicFrame(QuicPingFrame()));
+#endif // defined(__CHERI_PURE_CAPABNILITY__)
 }
 
 bool QuicConnection::HasPendingPathValidation() const {

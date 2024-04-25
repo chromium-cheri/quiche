@@ -70,7 +70,11 @@ TEST_F(QuicFramesTest, PaddingFrameToString) {
   std::ostringstream stream;
   stream << frame;
   EXPECT_EQ("{ num_padding_bytes: 1 }\n", stream.str());
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame quic_frame(&frame);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame quic_frame(frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(IsControlFrame(quic_frame.type));
 }
 
@@ -92,12 +96,22 @@ TEST_F(QuicFramesTest, RstStreamFrameToString) {
 }
 
 TEST_F(QuicFramesTest, StopSendingFrameToString) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame((new QuicStopSendingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame((QuicStopSendingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(1, &frame);
   EXPECT_EQ(1u, GetControlFrameId(frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frame.stop_sending_frame->stream_id = 321;
+  frame.stop_sending_frame->error_code = QUIC_STREAM_CANCELLED;
+  frame.stop_sending_frame->ietf_error_code =
+#else   // !__CHERI_PURE_CAPABILITY__
   frame.stop_sending_frame.stream_id = 321;
   frame.stop_sending_frame.error_code = QUIC_STREAM_CANCELLED;
   frame.stop_sending_frame.ietf_error_code =
+#endif  // !__CHERI_PURE_CAPABILITY__
       static_cast<uint64_t>(QuicHttp3ErrorCode::REQUEST_CANCELLED);
   std::ostringstream stream;
   stream << frame.stop_sending_frame;
@@ -144,14 +158,23 @@ TEST_F(QuicFramesTest, RetireConnectionIdFrameToString) {
 
 TEST_F(QuicFramesTest, StreamsBlockedFrameToString) {
   QuicStreamsBlockedFrame streams_blocked;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(&streams_blocked);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame(streams_blocked);
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(1, &frame);
   EXPECT_EQ(1u, GetControlFrameId(frame));
   // QuicStreamsBlocked is copied into a QuicFrame (as opposed to putting a
   // pointer to it into QuicFrame) so need to work with the copy in |frame| and
   // not the original one, streams_blocked.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frame.streams_blocked_frame->stream_count = 321;
+  frame.streams_blocked_frame->unidirectional = false;
+#else   // !__CHERI_PURE_CAPABILITY__
   frame.streams_blocked_frame.stream_count = 321;
   frame.streams_blocked_frame.unidirectional = false;
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::ostringstream stream;
   stream << frame.streams_blocked_frame;
   EXPECT_EQ("{ control_frame_id: 1, stream count: 321, bidirectional }\n",
@@ -161,14 +184,23 @@ TEST_F(QuicFramesTest, StreamsBlockedFrameToString) {
 
 TEST_F(QuicFramesTest, MaxStreamsFrameToString) {
   QuicMaxStreamsFrame max_streams;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(&max_streams);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame(max_streams);
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(1, &frame);
   EXPECT_EQ(1u, GetControlFrameId(frame));
   // QuicMaxStreams is copied into a QuicFrame (as opposed to putting a
   // pointer to it into QuicFrame) so need to work with the copy in |frame| and
   // not the original one, max_streams.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frame.max_streams_frame->stream_count = 321;
+  frame.max_streams_frame->unidirectional = true;
+#else   // !__CHERI_PURE_CAPABILITY__
   frame.max_streams_frame.stream_count = 321;
   frame.max_streams_frame.unidirectional = true;
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::ostringstream stream;
   stream << frame.max_streams_frame;
   EXPECT_EQ("{ control_frame_id: 1, stream_count: 321, unidirectional }\n",
@@ -235,12 +267,21 @@ TEST_F(QuicFramesTest, GoAwayFrameToString) {
 }
 
 TEST_F(QuicFramesTest, WindowUpdateFrameToString) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame((new QuicWindowUpdateFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame((QuicWindowUpdateFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(3, &frame);
   EXPECT_EQ(3u, GetControlFrameId(frame));
   std::ostringstream stream;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frame.window_update_frame->stream_id = 1;
+  frame.window_update_frame->max_data = 2;
+#else   // !__CHERI_PURE_CAPABILITY__
   frame.window_update_frame.stream_id = 1;
   frame.window_update_frame.max_data = 2;
+#endif  // !__CHERI_PURE_CAPABILITY__
   stream << frame.window_update_frame;
   EXPECT_EQ("{ control_frame_id: 3, stream_id: 1, max_data: 2 }\n",
             stream.str());
@@ -248,11 +289,20 @@ TEST_F(QuicFramesTest, WindowUpdateFrameToString) {
 }
 
 TEST_F(QuicFramesTest, BlockedFrameToString) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame((new QuicBlockedFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame((QuicBlockedFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(4, &frame);
   EXPECT_EQ(4u, GetControlFrameId(frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frame.blocked_frame->stream_id = 1;
+  frame.blocked_frame->offset = 2;
+#else   // !__CHERI_PURE_CAPABILITY__
   frame.blocked_frame.stream_id = 1;
   frame.blocked_frame.offset = 2;
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::ostringstream stream;
   stream << frame.blocked_frame;
   EXPECT_EQ("{ control_frame_id: 4, stream_id: 1, offset: 2 }\n", stream.str());
@@ -261,7 +311,11 @@ TEST_F(QuicFramesTest, BlockedFrameToString) {
 
 TEST_F(QuicFramesTest, PingFrameToString) {
   QuicPingFrame ping;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(&ping);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame(ping);
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(5, &frame);
   EXPECT_EQ(5u, GetControlFrameId(frame));
   std::ostringstream stream;
@@ -272,7 +326,11 @@ TEST_F(QuicFramesTest, PingFrameToString) {
 
 TEST_F(QuicFramesTest, HandshakeDoneFrameToString) {
   QuicHandshakeDoneFrame handshake_done;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(&handshake_done);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame frame(handshake_done);
+#endif  // !__CHERI_PURE_CAPABILITY__
   SetControlFrameId(6, &frame);
   EXPECT_EQ(6u, GetControlFrameId(frame));
   std::ostringstream stream;
@@ -318,7 +376,11 @@ TEST_F(QuicFramesTest, StopWaitingFrameToString) {
   std::ostringstream stream;
   stream << frame;
   EXPECT_EQ("{ least_unacked: 2 }\n", stream.str());
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame quic_frame(&frame);
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame quic_frame(frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(IsControlFrame(quic_frame.type));
 }
 
@@ -548,7 +610,11 @@ TEST_F(QuicFramesTest, CopyQuicFrames) {
   for (uint8_t i = 0; i < NUM_FRAME_TYPES; ++i) {
     switch (i) {
       case PADDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case RST_STREAM_FRAME:
         frames.push_back(QuicFrame(new QuicRstStreamFrame()));
@@ -560,46 +626,90 @@ TEST_F(QuicFramesTest, CopyQuicFrames) {
         frames.push_back(QuicFrame(new QuicGoAwayFrame()));
         break;
       case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicWindowUpdateFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicWindowUpdateFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicBlockedFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicBlockedFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STOP_WAITING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicStopWaitingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicStopWaitingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case PING_FRAME:
-        frames.push_back(QuicFrame(QuicPingFrame()));
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
+        frames.push_back(QuicFrame(new QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case CRYPTO_FRAME:
         frames.push_back(QuicFrame(new QuicCryptoFrame()));
         break;
       case STREAM_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicStreamFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicStreamFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case ACK_FRAME:
         frames.push_back(QuicFrame(new QuicAckFrame()));
         break;
       case MTU_DISCOVERY_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicMtuDiscoveryFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicMtuDiscoveryFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case NEW_CONNECTION_ID_FRAME:
         frames.push_back(QuicFrame(new QuicNewConnectionIdFrame()));
         break;
       case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicMaxStreamsFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicMaxStreamsFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicStreamsBlockedFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicStreamsBlockedFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case PATH_RESPONSE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicPathResponseFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicPathResponseFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case PATH_CHALLENGE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicPathChallengeFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicPathChallengeFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicStopSendingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicStopSendingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case MESSAGE_FRAME:
         frames.push_back(QuicFrame(message_frame));
@@ -611,7 +721,11 @@ TEST_F(QuicFramesTest, CopyQuicFrames) {
         frames.push_back(QuicFrame(new QuicRetireConnectionIdFrame()));
         break;
       case HANDSHAKE_DONE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(new QuicHandshakeDoneFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(QuicHandshakeDoneFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case ACK_FREQUENCY_FRAME:
         frames.push_back(QuicFrame(new QuicAckFrequencyFrame()));
@@ -637,18 +751,34 @@ TEST_F(QuicFramesTest, CopyQuicFrames) {
       EXPECT_EQ(0, memcmp(copy[i].message_frame->message_data[0].data(),
                           frames[i].message_frame->message_data[0].data(), 7));
     } else if (i == PATH_CHALLENGE_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      EXPECT_EQ(copy[i].path_challenge_frame->control_frame_id,
+                frames[i].path_challenge_frame->control_frame_id);
+      EXPECT_EQ(memcmp(&copy[i].path_challenge_frame->data_buffer,
+                       &frames[i].path_challenge_frame->data_buffer,
+                       copy[i].path_challenge_frame->data_buffer.size()),
+#else   // !__CHERI_PURE_CAPABILITY__
       EXPECT_EQ(copy[i].path_challenge_frame.control_frame_id,
                 frames[i].path_challenge_frame.control_frame_id);
       EXPECT_EQ(memcmp(&copy[i].path_challenge_frame.data_buffer,
                        &frames[i].path_challenge_frame.data_buffer,
                        copy[i].path_challenge_frame.data_buffer.size()),
+#endif  // !__CHERI_PURE_CAPABILITY__
                 0);
     } else if (i == PATH_RESPONSE_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      EXPECT_EQ(copy[i].path_response_frame->control_frame_id,
+                frames[i].path_response_frame->control_frame_id);
+      EXPECT_EQ(memcmp(&copy[i].path_response_frame->data_buffer,
+                       &frames[i].path_response_frame->data_buffer,
+                       copy[i].path_response_frame->data_buffer.size()),
+#else   // !__CHERI_PURE_CAPABILITY__
       EXPECT_EQ(copy[i].path_response_frame.control_frame_id,
                 frames[i].path_response_frame.control_frame_id);
       EXPECT_EQ(memcmp(&copy[i].path_response_frame.data_buffer,
                        &frames[i].path_response_frame.data_buffer,
                        copy[i].path_response_frame.data_buffer.size()),
+#endif  // !__CHERI_PURE_CAPABILITY__
                 0);
     }
   }

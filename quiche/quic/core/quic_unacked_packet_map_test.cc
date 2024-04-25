@@ -54,7 +54,11 @@ class QuicUnackedPacketMapTest : public QuicTestWithParam<Perspective> {
                             false, false);
     QuicStreamFrame frame;
     frame.stream_id = stream_id;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    packet.retransmittable_frames.push_back(QuicFrame(&frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     packet.retransmittable_frames.push_back(QuicFrame(frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
     return packet;
   }
 
@@ -145,7 +149,11 @@ class QuicUnackedPacketMapTest : public QuicTestWithParam<Perspective> {
         Perspective::IS_CLIENT);
     for (const auto& frame : info->retransmittable_frames) {
       if (frame.type == STREAM_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        stream_id = frame.stream_frame->stream_id;
+#else   // !__CHERI_PURE_CAPABILITY__
         stream_id = frame.stream_frame.stream_id;
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       }
     }
@@ -461,19 +469,35 @@ TEST_P(QuicUnackedPacketMapTest, AggregateContiguousAckedStreamFrames) {
 
   QuicTransmissionInfo info1;
   QuicStreamFrame stream_frame1(3, false, 0, 100);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info1.retransmittable_frames.push_back(QuicFrame(&stream_frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
   info1.retransmittable_frames.push_back(QuicFrame(stream_frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicTransmissionInfo info2;
   QuicStreamFrame stream_frame2(3, false, 100, 100);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info2.retransmittable_frames.push_back(QuicFrame(&stream_frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   info2.retransmittable_frames.push_back(QuicFrame(stream_frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicTransmissionInfo info3;
   QuicStreamFrame stream_frame3(3, false, 200, 100);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info3.retransmittable_frames.push_back(QuicFrame(&stream_frame3));
+#else   // !__CHERI_PURE_CAPABILITY__
   info3.retransmittable_frames.push_back(QuicFrame(stream_frame3));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicTransmissionInfo info4;
   QuicStreamFrame stream_frame4(3, true, 300, 0);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info4.retransmittable_frames.push_back(QuicFrame(&stream_frame4));
+#else   // !__CHERI_PURE_CAPABILITY__
   info4.retransmittable_frames.push_back(QuicFrame(stream_frame4));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Verify stream frames are aggregated.
   EXPECT_CALL(notifier_, OnFrameAcked(_, _, _)).Times(0);
@@ -512,7 +536,11 @@ TEST_P(QuicUnackedPacketMapTest, CannotAggregateIfDataLengthOverflow) {
       QuicTransmissionInfo info;
       QuicStreamFrame stream_frame(stream_id, false, offset,
                                    acked_stream_length);
+#if defined(__CHERI_PURE_CAPABILITY__)
+      info.retransmittable_frames.push_back(QuicFrame(&stream_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
       info.retransmittable_frames.push_back(QuicFrame(stream_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
       const QuicStreamFrame& aggregated_stream_frame =
           QuicUnackedPacketMapPeer::GetAggregatedStreamFrame(unacked_packets_);
@@ -541,7 +569,11 @@ TEST_P(QuicUnackedPacketMapTest, CannotAggregateIfDataLengthOverflow) {
     // Ack the last frame of the stream.
     QuicTransmissionInfo info;
     QuicStreamFrame stream_frame(stream_id, true, offset, acked_stream_length);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    info.retransmittable_frames.push_back(QuicFrame(&stream_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     info.retransmittable_frames.push_back(QuicFrame(stream_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
     EXPECT_CALL(notifier_, OnFrameAcked(_, _, _)).Times(1);
     unacked_packets_.MaybeAggregateAckedStreamFrame(
         info, QuicTime::Delta::Zero(), QuicTime::Zero());
@@ -558,12 +590,22 @@ TEST_P(QuicUnackedPacketMapTest, CannotAggregateAckedControlFrames) {
   QuicGoAwayFrame go_away(3, QUIC_PEER_GOING_AWAY, 5, "Going away.");
 
   QuicTransmissionInfo info1;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info1.retransmittable_frames.push_back(QuicFrame(&window_update));
+  info1.retransmittable_frames.push_back(QuicFrame(&stream_frame1));
+  info1.retransmittable_frames.push_back(QuicFrame(&stream_frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   info1.retransmittable_frames.push_back(QuicFrame(window_update));
   info1.retransmittable_frames.push_back(QuicFrame(stream_frame1));
   info1.retransmittable_frames.push_back(QuicFrame(stream_frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicTransmissionInfo info2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  info2.retransmittable_frames.push_back(QuicFrame(&blocked));
+#else   // !__CHERI_PURE_CAPABILITY__
   info2.retransmittable_frames.push_back(QuicFrame(blocked));
+#endif  // !__CHERI_PURE_CAPABILITY__
   info2.retransmittable_frames.push_back(QuicFrame(&go_away));
 
   // Verify 2 contiguous stream frames are aggregated.

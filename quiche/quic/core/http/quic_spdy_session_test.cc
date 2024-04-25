@@ -1938,16 +1938,28 @@ TEST_P(QuicSpdySessionTestServer, OnStreamFrameLost) {
         .WillOnce(Return(true));
   }
   EXPECT_CALL(*stream2, HasPendingRetransmission()).WillOnce(Return(true));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame3));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (!QuicVersionUsesCryptoFrames(transport_version())) {
     QuicStreamFrame frame1(QuicUtils::GetCryptoStreamId(transport_version()),
                            false, 0, 1300);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    session_.OnFrameLost(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
     session_.OnFrameLost(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
   } else {
     QuicCryptoFrame crypto_frame(ENCRYPTION_INITIAL, 0, 1300);
     session_.OnFrameLost(QuicFrame(&crypto_frame));
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame2));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame2));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_.WillingAndAbleToWrite());
 
   // Mark streams 2 and 4 write blocked.
@@ -2012,9 +2024,15 @@ TEST_P(QuicSpdySessionTestServer, DonotRetransmitDataOfClosedStreams) {
   EXPECT_CALL(*stream6, HasPendingRetransmission()).WillOnce(Return(true));
   EXPECT_CALL(*stream4, HasPendingRetransmission()).WillOnce(Return(true));
   EXPECT_CALL(*stream2, HasPendingRetransmission()).WillOnce(Return(true));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  session_.OnFrameLost(QuicFrame(&frame3));
+  session_.OnFrameLost(QuicFrame(&frame2));
+  session_.OnFrameLost(QuicFrame(&frame1));
+#else   // !__CHERI_PURE_CAPABILITY__
   session_.OnFrameLost(QuicFrame(frame3));
   session_.OnFrameLost(QuicFrame(frame2));
   session_.OnFrameLost(QuicFrame(frame1));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   session_.MarkConnectionLevelWriteBlocked(stream2->id());
   session_.MarkConnectionLevelWriteBlocked(stream4->id());
@@ -2055,10 +2073,17 @@ TEST_P(QuicSpdySessionTestServer, RetransmitFrames) {
   QuicStreamFrame frame3(stream6->id(), false, 0, 9);
   QuicWindowUpdateFrame window_update(1, stream2->id(), 9);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1));
+  frames.push_back(QuicFrame(&window_update));
+  frames.push_back(QuicFrame(&frame2));
+  frames.push_back(QuicFrame(&frame3));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1));
   frames.push_back(QuicFrame(window_update));
   frames.push_back(QuicFrame(frame2));
   frames.push_back(QuicFrame(frame3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(session_.WillingAndAbleToWrite());
 
   EXPECT_CALL(*stream2, RetransmitStreamData(_, _, _, _))
@@ -2266,12 +2291,25 @@ TEST_P(QuicSpdySessionTestServer, SimplePendingStreamType) {
         .WillOnce(Invoke([stream_id](const QuicFrame& frame) {
           EXPECT_EQ(STOP_SENDING_FRAME, frame.type);
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+          const QuicStopSendingFrame* stop_sending = frame.stop_sending_frame;
+#else   // !__CHERI_PURE_CAPABILITY__
           const QuicStopSendingFrame& stop_sending = frame.stop_sending_frame;
+#endif  // !__CHERI_PURE_CAPABILITY__
+#if defined(__CHERI_PURE_CAPABILITY__)
+          EXPECT_EQ(stream_id, stop_sending->stream_id);
+          EXPECT_EQ(QUIC_STREAM_STREAM_CREATION_ERROR, stop_sending->error_code);
+#else   // !__CHERI_PURE_CAPABILITY__
           EXPECT_EQ(stream_id, stop_sending.stream_id);
           EXPECT_EQ(QUIC_STREAM_STREAM_CREATION_ERROR, stop_sending.error_code);
+#endif  // !__CHERI_PURE_CAPABILITY__
           EXPECT_EQ(
               static_cast<uint64_t>(QuicHttp3ErrorCode::STREAM_CREATION_ERROR),
+#if defined(__CHERI_PURE_CAPABILITY__)
+              stop_sending->ietf_error_code);
+#else   // !__CHERI_PURE_CAPABILITY__
               stop_sending.ietf_error_code);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
           return ClearControlFrame(frame);
         }));

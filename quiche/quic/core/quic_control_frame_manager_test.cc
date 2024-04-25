@@ -81,9 +81,15 @@ class QuicControlFrameManagerTest : public QuicTest {
               QuicControlFrameManagerPeer::QueueSize(manager_.get()));
     EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&rst_stream_)));
     EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&goaway_)));
+#if defined(__CHERI_PURE_CAPABILITY__)
+    EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&window_update_)));
+    EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&blocked_)));
+    EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&stop_sending_)));
+#else   // !__CHERI_PURE_CAPABILITY__
     EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(window_update_)));
     EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(blocked_)));
     EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(stop_sending_)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
     EXPECT_FALSE(manager_->HasPendingRetransmission());
     EXPECT_TRUE(manager_->WillingToWrite());
@@ -115,12 +121,23 @@ TEST_F(QuicControlFrameManagerTest, OnControlFrameAcked) {
   manager_->OnCanWrite();
   EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&rst_stream_)));
   EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&goaway_)));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&window_update_)));
+  EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&blocked_)));
+  EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(&stop_sending_)));
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(window_update_)));
   EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(blocked_)));
   EXPECT_TRUE(manager_->IsControlFrameOutstanding(QuicFrame(stop_sending_)));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(manager_->OnControlFrameAcked(QuicFrame(&window_update_)));
+  EXPECT_FALSE(manager_->IsControlFrameOutstanding(QuicFrame(&window_update_)));
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->OnControlFrameAcked(QuicFrame(window_update_)));
   EXPECT_FALSE(manager_->IsControlFrameOutstanding(QuicFrame(window_update_)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(number_of_frames_,
             QuicControlFrameManagerPeer::QueueSize(manager_.get()));
 
@@ -160,7 +177,11 @@ TEST_F(QuicControlFrameManagerTest, OnControlFrameLost) {
   // Lost control frames 1, 2, 3.
   manager_->OnControlFrameLost(QuicFrame(&rst_stream_));
   manager_->OnControlFrameLost(QuicFrame(&goaway_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  manager_->OnControlFrameLost(QuicFrame(&window_update_));
+#else   // !__CHERI_PURE_CAPABILITY__
   manager_->OnControlFrameLost(QuicFrame(window_update_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->HasPendingRetransmission());
 
   // Ack control frame 2.
@@ -201,12 +222,20 @@ TEST_F(QuicControlFrameManagerTest, RetransmitControlFrame) {
   // Retransmit control frame 3.
   EXPECT_CALL(*session_, WriteControlFrame(_, _))
       .WillOnce(Invoke(&ClearControlFrameWithTransmissionType));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(manager_->RetransmitControlFrame(QuicFrame(&window_update_),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->RetransmitControlFrame(QuicFrame(window_update_),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                                PTO_RETRANSMISSION));
 
   // Retransmit control frame 4, and connection is write blocked.
   EXPECT_CALL(*session_, WriteControlFrame(_, _)).WillOnce(Return(false));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_FALSE(manager_->RetransmitControlFrame(QuicFrame(&window_update_),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(manager_->RetransmitControlFrame(QuicFrame(window_update_),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                                 PTO_RETRANSMISSION));
 }
 
@@ -287,9 +316,15 @@ TEST_F(QuicControlFrameManagerTest, DonotRetransmitOldWindowUpdates) {
   manager_->OnCanWrite();
 
   // Mark all 3 window updates as lost.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  manager_->OnControlFrameLost(QuicFrame(&window_update_));
+  manager_->OnControlFrameLost(QuicFrame(&window_update2));
+  manager_->OnControlFrameLost(QuicFrame(&window_update3));
+#else   // !__CHERI_PURE_CAPABILITY__
   manager_->OnControlFrameLost(QuicFrame(window_update_));
   manager_->OnControlFrameLost(QuicFrame(window_update2));
   manager_->OnControlFrameLost(QuicFrame(window_update3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->HasPendingRetransmission());
   EXPECT_TRUE(manager_->WillingToWrite());
 
@@ -298,7 +333,11 @@ TEST_F(QuicControlFrameManagerTest, DonotRetransmitOldWindowUpdates) {
       .WillOnce(Invoke(this, &QuicControlFrameManagerTest::SaveControlFrame));
   manager_->OnCanWrite();
   EXPECT_EQ(number_of_frames_ + 2u,
+#if defined(__CHERI_PURE_CAPABILITY__)
+            frame_.window_update_frame->control_frame_id);
+#else   // !__CHERI_PURE_CAPABILITY__
             frame_.window_update_frame.control_frame_id);
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(manager_->HasPendingRetransmission());
   EXPECT_FALSE(manager_->WillingToWrite());
   DeleteFrame(&frame_);
@@ -319,9 +358,15 @@ TEST_F(QuicControlFrameManagerTest, RetransmitWindowUpdateOfDifferentStreams) {
   manager_->OnCanWrite();
 
   // Mark all 3 window updates as lost.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  manager_->OnControlFrameLost(QuicFrame(&window_update_));
+  manager_->OnControlFrameLost(QuicFrame(&window_update2));
+  manager_->OnControlFrameLost(QuicFrame(&window_update3));
+#else   // !__CHERI_PURE_CAPABILITY__
   manager_->OnControlFrameLost(QuicFrame(window_update_));
   manager_->OnControlFrameLost(QuicFrame(window_update2));
   manager_->OnControlFrameLost(QuicFrame(window_update3));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(manager_->HasPendingRetransmission());
   EXPECT_TRUE(manager_->WillingToWrite());
 

@@ -259,7 +259,11 @@ bool QuicUtils::IsHandshakeFrame(const QuicFrame& frame,
                                  QuicTransportVersion transport_version) {
   if (!QuicVersionUsesCryptoFrames(transport_version)) {
     return frame.type == STREAM_FRAME &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+           frame.stream_frame->stream_id == GetCryptoStreamId(transport_version);
+#else // defined(__CHERI_PURE_CAPABILITY__)
            frame.stream_frame.stream_id == GetCryptoStreamId(transport_version);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   } else {
     return frame.type == CRYPTO_FRAME;
   }

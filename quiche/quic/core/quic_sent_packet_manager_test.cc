@@ -69,7 +69,11 @@ class QuicSentPacketManagerTest : public QuicTest {
                      kDefaultLength, HAS_RETRANSMITTABLE_DATA));
     SerializedPacket packet(CreatePacket(packet_number, false));
     packet.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        QuicFrame(new QuicStreamFrame(1, false, 0, absl::string_view())));
+#else   // !__CHERI_PURE_CAPABILITY__
         QuicFrame(QuicStreamFrame(1, false, 0, absl::string_view())));
+#endif  // !__CHERI_PURE_CAPABILITY__
     packet.has_crypto_handshake = IS_HANDSHAKE;
     manager_.OnPacketSent(&packet, clock_.Now(), HANDSHAKE_RETRANSMISSION,
                           HAS_RETRANSMITTABLE_DATA, true, ECN_NOT_ECT);
@@ -245,7 +249,11 @@ class QuicSentPacketManagerTest : public QuicTest {
                             false, false);
     if (retransmittable) {
       packet.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          QuicFrame(new QuicStreamFrame(kStreamId, false, 0, absl::string_view())));
+#else   // !__CHERI_PURE_CAPABILITY__
           QuicFrame(QuicStreamFrame(kStreamId, false, 0, absl::string_view())));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     return packet;
   }
@@ -254,7 +262,11 @@ class QuicSentPacketManagerTest : public QuicTest {
     SerializedPacket packet(QuicPacketNumber(packet_number),
                             PACKET_4BYTE_PACKET_NUMBER, nullptr, kDefaultLength,
                             false, false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    packet.retransmittable_frames.push_back(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
     packet.retransmittable_frames.push_back(QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
     return packet;
   }
 
@@ -296,7 +308,11 @@ class QuicSentPacketManagerTest : public QuicTest {
                      kDefaultLength, HAS_RETRANSMITTABLE_DATA));
     SerializedPacket packet(CreatePacket(packet_number, false));
     packet.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        QuicFrame(new QuicStreamFrame(1, false, 0, absl::string_view())));
+#else   // !__CHERI_PURE_CAPABILITY__
         QuicFrame(QuicStreamFrame(1, false, 0, absl::string_view())));
+#endif  // !__CHERI_PURE_CAPABILITY__
     packet.has_crypto_handshake = IS_HANDSHAKE;
     manager_.OnPacketSent(&packet, clock_.Now(), NOT_RETRANSMISSION,
                           HAS_RETRANSMITTABLE_DATA, true, ECN_NOT_ECT);
@@ -2741,7 +2757,11 @@ TEST_F(QuicSentPacketManagerTest, SendPathChallengeAndGetAck) {
                           kDefaultLength, false, false);
   QuicPathFrameBuffer path_frame_buffer{0, 1, 2, 3, 4, 5, 6, 7};
   packet.nonretransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   packet.encryption_level = ENCRYPTION_FORWARD_SECURE;
   manager_.OnPacketSent(&packet, clock_.Now(), NOT_RETRANSMISSION,
                         NO_RETRANSMITTABLE_DATA, false, ECN_NOT_ECT);

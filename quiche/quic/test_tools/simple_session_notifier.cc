@@ -120,7 +120,11 @@ void SimpleSessionNotifier::WriteOrBufferWindowUpate(
       HasBufferedStreamData() || HasBufferedControlFrames();
   QuicControlFrameId control_frame_id = ++last_control_frame_id_;
   control_frames_.emplace_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      (QuicFrame(new QuicWindowUpdateFrame(control_frame_id, id, byte_offset))));
+#else   // !__CHERI_PURE_CAPABILITY__
       (QuicFrame(QuicWindowUpdateFrame(control_frame_id, id, byte_offset))));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (had_buffered_data) {
     QUIC_DLOG(WARNING) << "Connection is write blocked";
     return;
@@ -133,7 +137,11 @@ void SimpleSessionNotifier::WriteOrBufferPing() {
   const bool had_buffered_data =
       HasBufferedStreamData() || HasBufferedControlFrames();
   control_frames_.emplace_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      (QuicFrame(new QuicPingFrame(++last_control_frame_id_))));
+#else   // !__CHERI_PURE_CAPABILITY__
       (QuicFrame(QuicPingFrame(++last_control_frame_id_))));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (had_buffered_data) {
     QUIC_DLOG(WARNING) << "Connection is write blocked";
     return;
@@ -173,7 +181,11 @@ void SimpleSessionNotifier::NeuterUnencryptedData() {
     QuicStreamFrame stream_frame(
         QuicUtils::GetCryptoStreamId(connection_->transport_version()), false,
         interval.min(), interval.max() - interval.min());
+#if defined(__CHERI_PURE_CAPABILITY__)
+    OnFrameAcked(QuicFrame(&stream_frame), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
     OnFrameAcked(QuicFrame(stream_frame), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                  QuicTime::Zero());
   }
 }
@@ -279,15 +291,29 @@ bool SimpleSessionNotifier::OnFrameAcked(const QuicFrame& frame,
   if (frame.type != STREAM_FRAME) {
     return OnControlFrameAcked(frame);
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  if (!stream_map_.contains(frame.stream_frame->stream_id)) {
+#else   // !__CHERI_PURE_CAPABILITY__
   if (!stream_map_.contains(frame.stream_frame.stream_id)) {
+#endif  // !__CHERI_PURE_CAPABILITY__
     return false;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  auto* state = &stream_map_.find(frame.stream_frame->stream_id)->second;
+  QuicStreamOffset offset = frame.stream_frame->offset;
+  QuicByteCount data_length = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   auto* state = &stream_map_.find(frame.stream_frame.stream_id)->second;
   QuicStreamOffset offset = frame.stream_frame.offset;
   QuicByteCount data_length = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicIntervalSet<QuicStreamOffset> newly_acked(offset, offset + data_length);
   newly_acked.Difference(state->bytes_acked);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const bool fin_newly_acked = frame.stream_frame->fin && state->fin_outstanding;
+#else   // !__CHERI_PURE_CAPABILITY__
   const bool fin_newly_acked = frame.stream_frame.fin && state->fin_outstanding;
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (newly_acked.Empty() && !fin_newly_acked) {
     return false;
   }
@@ -320,15 +346,29 @@ void SimpleSessionNotifier::OnFrameLost(const QuicFrame& frame) {
     OnControlFrameLost(frame);
     return;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  if (!stream_map_.contains(frame.stream_frame->stream_id)) {
+#else   // !__CHERI_PURE_CAPABILITY__
   if (!stream_map_.contains(frame.stream_frame.stream_id)) {
+#endif  // !__CHERI_PURE_CAPABILITY__
     return;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  auto* state = &stream_map_.find(frame.stream_frame->stream_id)->second;
+  QuicStreamOffset offset = frame.stream_frame->offset;
+  QuicByteCount data_length = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   auto* state = &stream_map_.find(frame.stream_frame.stream_id)->second;
   QuicStreamOffset offset = frame.stream_frame.offset;
   QuicByteCount data_length = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicIntervalSet<QuicStreamOffset> bytes_lost(offset, offset + data_length);
   bytes_lost.Difference(state->bytes_acked);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const bool fin_lost = state->fin_outstanding && frame.stream_frame->fin;
+#else   // !__CHERI_PURE_CAPABILITY__
   const bool fin_lost = state->fin_outstanding && frame.stream_frame.fin;
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (bytes_lost.Empty() && !fin_lost) {
     return;
   }
@@ -375,17 +415,34 @@ bool SimpleSessionNotifier::RetransmitFrames(const QuicFrames& frames,
       }
       continue;
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (!stream_map_.contains(frame.stream_frame->stream_id)) {
+#else   // !__CHERI_PURE_CAPABILITY__
     if (!stream_map_.contains(frame.stream_frame.stream_id)) {
+#endif  // !__CHERI_PURE_CAPABILITY__
       continue;
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    const auto& state = stream_map_.find(frame.stream_frame->stream_id)->second;
+#else   // !__CHERI_PURE_CAPABILITY__
     const auto& state = stream_map_.find(frame.stream_frame.stream_id)->second;
+#endif  // !__CHERI_PURE_CAPABILITY__
     QuicIntervalSet<QuicStreamOffset> retransmission(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame.stream_frame->offset,
+        frame.stream_frame->offset + frame.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame.stream_frame.offset,
         frame.stream_frame.offset + frame.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
     EncryptionLevel retransmission_encryption_level =
         connection_->encryption_level();
     if (QuicUtils::IsCryptoStreamId(connection_->transport_version(),
+#if defined(__CHERI_PURE_CAPABILITY__)
+                                    frame.stream_frame->stream_id)) {
+#else   // !__CHERI_PURE_CAPABILITY__
                                     frame.stream_frame.stream_id)) {
+#endif  // !__CHERI_PURE_CAPABILITY__
       for (size_t i = 0; i < NUM_ENCRYPTION_LEVELS; ++i) {
         if (retransmission.Intersects(crypto_bytes_transferred_[i])) {
           retransmission_encryption_level = static_cast<EncryptionLevel>(i);
@@ -395,7 +452,11 @@ bool SimpleSessionNotifier::RetransmitFrames(const QuicFrames& frames,
       }
     }
     retransmission.Difference(state.bytes_acked);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    bool retransmit_fin = frame.stream_frame->fin && state.fin_outstanding;
+#else   // !__CHERI_PURE_CAPABILITY__
     bool retransmit_fin = frame.stream_frame.fin && state.fin_outstanding;
+#endif  // !__CHERI_PURE_CAPABILITY__
     QuicConsumedData consumed(0, false);
     for (const auto& interval : retransmission) {
       QuicStreamOffset retransmission_offset = interval.min();
@@ -406,14 +467,26 @@ bool SimpleSessionNotifier::RetransmitFrames(const QuicFrames& frames,
       QuicConnection::ScopedEncryptionLevelContext context(
           connection_,
           QuicUtils::IsCryptoStreamId(connection_->transport_version(),
+#if defined(__CHERI_PURE_CAPABILITY__)
+                                      frame.stream_frame->stream_id)
+#else   // !__CHERI_PURE_CAPABILITY__
                                       frame.stream_frame.stream_id)
+#endif  // !__CHERI_PURE_CAPABILITY__
               ? retransmission_encryption_level
               : connection_->framer()
                     .GetEncryptionLevelToSendApplicationData());
       consumed = connection_->SendStreamData(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          frame.stream_frame->stream_id, retransmission_length,
+#else   // !__CHERI_PURE_CAPABILITY__
           frame.stream_frame.stream_id, retransmission_length,
+#endif  // !__CHERI_PURE_CAPABILITY__
           retransmission_offset, can_bundle_fin ? FIN : NO_FIN);
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QUIC_DVLOG(1) << "stream " << frame.stream_frame->stream_id
+#else   // !__CHERI_PURE_CAPABILITY__
       QUIC_DVLOG(1) << "stream " << frame.stream_frame.stream_id
+#endif  // !__CHERI_PURE_CAPABILITY__
                     << " is forced to retransmit stream data ["
                     << retransmission_offset << ", "
                     << retransmission_offset + retransmission_length
@@ -429,9 +502,17 @@ bool SimpleSessionNotifier::RetransmitFrames(const QuicFrames& frames,
       }
     }
     if (retransmit_fin) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QUIC_DVLOG(1) << "stream " << frame.stream_frame->stream_id
+#else   // !__CHERI_PURE_CAPABILITY__
       QUIC_DVLOG(1) << "stream " << frame.stream_frame.stream_id
+#endif  // !__CHERI_PURE_CAPABILITY__
                     << " retransmits fin only frame.";
+#if defined(__CHERI_PURE_CAPABILITY__)
+      consumed = connection_->SendStreamData(frame.stream_frame->stream_id, 0,
+#else   // !__CHERI_PURE_CAPABILITY__
       consumed = connection_->SendStreamData(frame.stream_frame.stream_id, 0,
+#endif  // !__CHERI_PURE_CAPABILITY__
                                              state.bytes_sent, FIN);
       if (!consumed.fin_consumed) {
         return false;
@@ -453,15 +534,29 @@ bool SimpleSessionNotifier::IsFrameOutstanding(const QuicFrame& frame) const {
   if (frame.type != STREAM_FRAME) {
     return IsControlFrameOutstanding(frame);
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  if (!stream_map_.contains(frame.stream_frame->stream_id)) {
+#else   // !__CHERI_PURE_CAPABILITY__
   if (!stream_map_.contains(frame.stream_frame.stream_id)) {
+#endif  // !__CHERI_PURE_CAPABILITY__
     return false;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const auto& state = stream_map_.find(frame.stream_frame->stream_id)->second;
+  QuicStreamOffset offset = frame.stream_frame->offset;
+  QuicByteCount data_length = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   const auto& state = stream_map_.find(frame.stream_frame.stream_id)->second;
   QuicStreamOffset offset = frame.stream_frame.offset;
   QuicByteCount data_length = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   return (data_length > 0 &&
           !state.bytes_acked.Contains(offset, offset + data_length)) ||
+#if defined(__CHERI_PURE_CAPABILITY__)
+         (frame.stream_frame->fin && state.fin_outstanding);
+#else   // !__CHERI_PURE_CAPABILITY__
          (frame.stream_frame.fin && state.fin_outstanding);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 bool SimpleSessionNotifier::HasUnackedCryptoData() const {

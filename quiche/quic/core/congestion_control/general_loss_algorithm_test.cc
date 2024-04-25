@@ -41,7 +41,11 @@ class GeneralLossAlgorithmTest : public QuicTest {
     SerializedPacket packet(QuicPacketNumber(packet_number),
                             PACKET_1BYTE_PACKET_NUMBER, nullptr,
                             encrypted_length, false, false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    packet.retransmittable_frames.push_back(QuicFrame(&frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     packet.retransmittable_frames.push_back(QuicFrame(frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
     unacked_packets_.AddSentPacket(&packet, NOT_RETRANSMISSION, clock_.Now(),
                                    true, true, ECN_NOT_ECT);
   }

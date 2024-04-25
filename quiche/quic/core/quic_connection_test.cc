@@ -255,7 +255,11 @@ class TestConnection : public QuicConnection {
     serialized_packet.peer_address = kPeerAddress;
     if (retransmittable == HAS_RETRANSMITTABLE_DATA) {
       serialized_packet.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
           QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     OnSerializedPacket(std::move(serialized_packet));
   }
@@ -760,7 +764,11 @@ class QuicConnectionTest : public QuicTestWithParam<TestParams> {
     if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
       return QuicFrame(new QuicCryptoFrame(crypto_frame_));
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    return QuicFrame(new QuicStreamFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
     return QuicFrame(QuicStreamFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
         QuicUtils::GetCryptoStreamId(connection_.transport_version()), false,
         0u, absl::string_view()));
   }
@@ -989,10 +997,18 @@ class QuicConnectionTest : public QuicTestWithParam<TestParams> {
     if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
       frames.push_back(QuicFrame(&crypto_frame_));
     } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     if (level == ENCRYPTION_INITIAL) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     std::unique_ptr<QuicPacket> packet = ConstructPacket(header, frames);
     char buffer[kMaxOutgoingPacketSize];
@@ -1095,13 +1111,21 @@ class QuicConnectionTest : public QuicTestWithParam<TestParams> {
   }
 
   void ProcessStopWaitingPacket(QuicStopWaitingFrame frame) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    ProcessFramePacket(QuicFrame(&frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     ProcessFramePacket(QuicFrame(frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
 
   size_t ProcessStopWaitingPacketAtLevel(uint64_t number,
                                          QuicStopWaitingFrame frame,
                                          EncryptionLevel /*level*/) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    return ProcessFramePacketAtLevel(number, QuicFrame(&frame),
+#else   // !__CHERI_PURE_CAPABILITY__
     return ProcessFramePacketAtLevel(number, QuicFrame(frame),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      ENCRYPTION_ZERO_RTT);
   }
 
@@ -1176,12 +1200,25 @@ class QuicConnectionTest : public QuicTestWithParam<TestParams> {
     QuicFrames frames;
     if (VersionHasIetfQuicFrames(version().transport_version) &&
         (level == ENCRYPTION_INITIAL || level == ENCRYPTION_HANDSHAKE)) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(new QuicPingFrame()));
+      frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(QuicPingFrame()));
       frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
       if (has_stop_waiting) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frames.push_back(QuicFrame(&stop_waiting_));
+#else   // !__CHERI_PURE_CAPABILITY__
         frames.push_back(QuicFrame(stop_waiting_));
+#endif  // !__CHERI_PURE_CAPABILITY__
       }
     }
     return ConstructPacket(header, frames);
@@ -1756,7 +1793,11 @@ TEST_P(QuicConnectionTest, PeerPortChangeAtServer) {
       .WillOnce(Invoke(
           [=]() { EXPECT_EQ(kNewPeerAddress, connection_.peer_address()); }));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kPeerAddress, connection_.peer_address());
@@ -1766,7 +1807,11 @@ TEST_P(QuicConnectionTest, PeerPortChangeAtServer) {
   // start connection migration.
   EXPECT_CALL(visitor_, OnConnectionMigration(PORT_CHANGE)).Times(1);
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kNewPeerAddress, connection_.peer_address());
@@ -1829,7 +1874,11 @@ TEST_P(QuicConnectionTest, PeerIpAddressChangeAtServer) {
       .WillOnce(Invoke(
           [=]() { EXPECT_EQ(kNewPeerAddress, connection_.peer_address()); }));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kPeerAddress, connection_.peer_address());
@@ -1853,7 +1902,11 @@ TEST_P(QuicConnectionTest, PeerIpAddressChangeAtServer) {
   EXPECT_CALL(visitor_, OnCanWrite()).Times(AtLeast(1u));
 
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kNewPeerAddress, connection_.peer_address());
@@ -1908,7 +1961,11 @@ TEST_P(QuicConnectionTest, PeerIpAddressChangeAtServer) {
 
   // Receiving PATH_RESPONSE should lift the anti-amplification limit.
   QuicFrames frames3;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames3.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames3.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_CALL(visitor_, MaybeSendAddressToken());
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _))
       .Times(testing::AtLeast(1u));
@@ -1967,7 +2024,11 @@ TEST_P(QuicConnectionTest, PeerIpAddressChangeAtServerWithMissingConnectionId) {
       QuicSocketAddress(QuicIpAddress::Loopback4(), /*port=*/23456);
   EXPECT_CALL(visitor_, OnStreamFrame(_)).Times(2);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kPeerAddress, connection_.peer_address());
@@ -1985,9 +2046,17 @@ TEST_P(QuicConnectionTest, PeerIpAddressChangeAtServerWithMissingConnectionId) {
   EXPECT_CALL(visitor_, OnCanWrite()).Times(AtLeast(1u));
 
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (GetQuicFlag(quic_enforce_strict_amplification_factor)) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames2.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames2.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -2232,7 +2301,11 @@ TEST_P(QuicConnectionTest,
   const QuicSocketAddress kPeerAddress2 =
       QuicSocketAddress(QuicIpAddress::Loopback4(), /*port=*/23456);
   peer_creator_.SetServerConnectionId(new_cid);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramesPacketWithAddresses({QuicFrame(new QuicPingFrame())}, kSelfAddress,
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses({QuicFrame(QuicPingFrame())}, kSelfAddress,
+#endif  // !__CHERI_PURE_CAPABILITY__
                                    kPeerAddress2, ENCRYPTION_FORWARD_SECURE);
   EXPECT_FALSE(writer_->path_challenge_frames().empty());
   QuicPathFrameBuffer reverse_path_challenge_payload =
@@ -2252,7 +2325,11 @@ TEST_P(QuicConnectionTest,
       return true;
     }));
     ProcessFramesPacketWithAddresses(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        {QuicFrame(new QuicPathResponseFrame(0, reverse_path_challenge_payload)),
+#else   // !__CHERI_PURE_CAPABILITY__
         {QuicFrame(QuicPathResponseFrame(0, reverse_path_challenge_payload)),
+#endif  // !__CHERI_PURE_CAPABILITY__
          QuicFrame(&ack_frame)},
         kSelfAddress, kPeerAddress3, ENCRYPTION_FORWARD_SECURE);
   }
@@ -2318,7 +2395,11 @@ TEST_P(QuicConnectionTest, ReversePathValidationFailureAtServer) {
       .WillOnce(Invoke(
           [=]() { EXPECT_EQ(kNewPeerAddress, connection_.peer_address()); }));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kPeerAddress, connection_.peer_address());
@@ -2332,9 +2413,17 @@ TEST_P(QuicConnectionTest, ReversePathValidationFailureAtServer) {
   EXPECT_CALL(*send_algorithm_, OnConnectionMigration()).Times(0);
 
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPaddingFrame padding;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&padding));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(padding));
+#endif  // !__CHERI_PURE_CAPABILITY__
   peer_creator_.SetServerConnectionId(server_cid1);
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -2371,7 +2460,11 @@ TEST_P(QuicConnectionTest, ReversePathValidationFailureAtServer) {
 
   // Make sure anti-amplification limit is not reached.
   ProcessFramesPacketWithAddresses(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      {QuicFrame(new QuicPingFrame()), QuicFrame(new QuicPaddingFrame())}, kSelfAddress,
+#else   // !__CHERI_PURE_CAPABILITY__
       {QuicFrame(QuicPingFrame()), QuicFrame(QuicPaddingFrame())}, kSelfAddress,
+#endif  // !__CHERI_PURE_CAPABILITY__
       kNewPeerAddress, ENCRYPTION_FORWARD_SECURE);
   SendStreamDataToPeer(1, "foo", 0, NO_FIN, nullptr);
   EXPECT_TRUE(connection_.GetRetransmissionAlarm()->IsSet());
@@ -2657,7 +2750,11 @@ TEST_P(QuicConnectionTest, ReceivePathProbingFromNewPeerAddressAtServer) {
     EXPECT_EQ((connection_.validate_client_address() ? 2 : 3) * bytes_sent,
               QuicConnectionPeer::BytesSentOnAlternativePath(&connection_));
     QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     ProcessFramesPacketWithAddresses(frames, connection_.self_address(),
                                      kNewPeerAddress,
                                      ENCRYPTION_FORWARD_SECURE);
@@ -2803,11 +2900,19 @@ TEST_P(QuicConnectionTest, ReceivePaddedPingWithPortChangeAtServer) {
   QuicFrames frames;
   // Write a PING frame, which has no data payload.
   QuicPingFrame ping_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&ping_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(ping_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Add padding to the rest of the packet.
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   uint64_t num_probing_received =
       connection_.GetStats().num_connectivity_probing_received;
@@ -3179,9 +3284,17 @@ TEST_P(QuicConnectionTest, IncreaseServerMaxPacketSize) {
   if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
     frames.push_back(QuicFrame(&crypto_frame_));
   } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&padding));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(padding));
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::unique_ptr<QuicPacket> packet(ConstructPacket(header, frames));
   char buffer[kMaxOutgoingPacketSize];
   size_t encrypted_length =
@@ -3231,9 +3344,17 @@ TEST_P(QuicConnectionTest, IncreaseServerMaxPacketSizeWhileWriterLimited) {
   if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
     frames.push_back(QuicFrame(&crypto_frame_));
   } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&padding));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(padding));
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::unique_ptr<QuicPacket> packet(ConstructPacket(header, frames));
   char buffer[kMaxOutgoingPacketSize];
   size_t encrypted_length =
@@ -3549,7 +3670,11 @@ TEST_P(QuicConnectionTest, AckNeedsRetransmittableFrames) {
   // WINDOW_UPDATE.
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame())
       .WillOnce(Invoke([this]() {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        connection_.SendControlFrame(QuicFrame(new QuicWindowUpdateFrame(1, 0, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
         connection_.SendControlFrame(QuicFrame(QuicWindowUpdateFrame(1, 0, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
       }));
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(1);
   EXPECT_EQ(0u, writer_->window_update_frames().size());
@@ -3576,7 +3701,11 @@ TEST_P(QuicConnectionTest, AckNeedsRetransmittableFrames) {
   // Session does not add a retransmittable frame.
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame())
       .WillOnce(Invoke([this]() {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        connection_.SendControlFrame(QuicFrame(new QuicPingFrame(1)));
+#else   // !__CHERI_PURE_CAPABILITY__
         connection_.SendControlFrame(QuicFrame(QuicPingFrame(1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
       }));
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(1);
   EXPECT_EQ(0u, writer_->ping_frames().size());
@@ -3619,7 +3748,11 @@ TEST_P(QuicConnectionTest, AckNeedsRetransmittableFramesAfterPto) {
   // with the ACK.
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame())
       .WillOnce(Invoke([this]() {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        connection_.SendControlFrame(QuicFrame(new QuicWindowUpdateFrame(1, 0, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
         connection_.SendControlFrame(QuicFrame(QuicWindowUpdateFrame(1, 0, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
       }));
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(1);
   ProcessDataPacket(11);
@@ -3641,7 +3774,11 @@ TEST_P(QuicConnectionTest, TooManySentPackets) {
   EXPECT_CALL(visitor_,
               OnConnectionClosed(_, ConnectionCloseSource::FROM_SELF));
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   TestConnectionCloseQuicErrorCode(QUIC_TOO_MANY_OUTSTANDING_SENT_PACKETS);
 }
@@ -4052,7 +4189,11 @@ TEST_P(QuicConnectionTest, LargeSendWithPendingAck) {
   EXPECT_CALL(visitor_, OnSuccessfulVersionNegotiation(_));
 
   // Processs a PING frame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   // Ensure that this has caused the ACK alarm to be set.
   EXPECT_TRUE(connection_.HasPendingAcks());
 
@@ -6775,7 +6916,11 @@ TEST_P(QuicConnectionTest, WindowUpdate) {
   window_update.stream_id = 3;
   window_update.max_data = 1234;
   EXPECT_CALL(visitor_, OnWindowUpdateFrame(_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(&window_update));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(window_update));
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_P(QuicConnectionTest, Blocked) {
@@ -6784,7 +6929,11 @@ TEST_P(QuicConnectionTest, Blocked) {
   QuicBlockedFrame blocked;
   blocked.stream_id = 3;
   EXPECT_CALL(visitor_, OnBlockedFrame(_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(&blocked));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(blocked));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(1u, connection_.GetStats().blocked_frames_received);
   EXPECT_EQ(0u, connection_.GetStats().blocked_frames_sent);
 }
@@ -6896,7 +7045,11 @@ TEST_P(QuicConnectionTest, ProcessFramesIfPacketClosedConnection) {
                                 kQuicErrorCode, NO_IETF_QUIC_ERROR, "",
                                 /*transport_close_frame_type=*/0);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(&qccf));
   std::unique_ptr<QuicPacket> packet(ConstructPacket(header, frames));
   EXPECT_TRUE(nullptr != packet);
@@ -7024,7 +7177,11 @@ TEST_P(QuicConnectionTest, WindowUpdateInstigateAcks) {
   window_update.stream_id = 3;
   window_update.max_data = 1234;
   EXPECT_CALL(visitor_, OnWindowUpdateFrame(_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(&window_update));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(window_update));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Ensure that this has caused the ACK alarm to be set.
   EXPECT_TRUE(connection_.HasPendingAcks());
@@ -7037,7 +7194,11 @@ TEST_P(QuicConnectionTest, BlockedFrameInstigateAcks) {
   QuicBlockedFrame blocked;
   blocked.stream_id = 3;
   EXPECT_CALL(visitor_, OnBlockedFrame(_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(&blocked));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(blocked));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Ensure that this has caused the ACK alarm to be set.
   EXPECT_TRUE(connection_.HasPendingAcks());
@@ -7110,7 +7271,11 @@ TEST_P(QuicConnectionTest, SendPingImmediately) {
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(1);
   EXPECT_CALL(debug_visitor, OnPacketSent(_, _, _, _, _, _, _, _)).Times(1);
   EXPECT_CALL(debug_visitor, OnPingSent()).Times(1);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  connection_.SendControlFrame(QuicFrame(new QuicPingFrame(1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   connection_.SendControlFrame(QuicFrame(QuicPingFrame(1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_FALSE(connection_.HasQueuedData());
 }
 
@@ -7122,7 +7287,11 @@ TEST_P(QuicConnectionTest, SendBlockedImmediately) {
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(1);
   EXPECT_CALL(debug_visitor, OnPacketSent(_, _, _, _, _, _, _, _)).Times(1);
   EXPECT_EQ(0u, connection_.GetStats().blocked_frames_sent);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  connection_.SendControlFrame(QuicFrame(new QuicBlockedFrame(1, 3, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
   connection_.SendControlFrame(QuicFrame(QuicBlockedFrame(1, 3, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(1u, connection_.GetStats().blocked_frames_sent);
   EXPECT_FALSE(connection_.HasQueuedData());
 }
@@ -7138,7 +7307,11 @@ TEST_P(QuicConnectionTest, FailedToSendBlockedFrames) {
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(0);
   EXPECT_CALL(debug_visitor, OnPacketSent(_, _, _, _, _, _, _, _)).Times(0);
   EXPECT_EQ(0u, connection_.GetStats().blocked_frames_sent);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  connection_.SendControlFrame(QuicFrame(&blocked));
+#else   // !__CHERI_PURE_CAPABILITY__
   connection_.SendControlFrame(QuicFrame(blocked));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(0u, connection_.GetStats().blocked_frames_sent);
   EXPECT_FALSE(connection_.HasQueuedData());
 }
@@ -7748,7 +7921,11 @@ TEST_P(QuicConnectionTest, ServerReceivesChloOnNonCryptoStream) {
   }
   EXPECT_CALL(visitor_,
               OnConnectionClosed(_, ConnectionCloseSource::FROM_SELF));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ForceProcessFramePacket(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   ForceProcessFramePacket(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (VersionHasIetfQuicFrames(version().transport_version)) {
     // INITIAL packet should not contain STREAM frame.
     TestConnectionCloseQuicErrorCode(IETF_QUIC_PROTOCOL_VIOLATION);
@@ -7770,7 +7947,11 @@ TEST_P(QuicConnectionTest, ClientReceivesRejOnNonCryptoStream) {
 
   EXPECT_CALL(visitor_,
               OnConnectionClosed(_, ConnectionCloseSource::FROM_SELF));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ForceProcessFramePacket(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   ForceProcessFramePacket(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   if (VersionHasIetfQuicFrames(version().transport_version)) {
     // INITIAL packet should not contain STREAM frame.
     TestConnectionCloseQuicErrorCode(IETF_QUIC_PROTOCOL_VIOLATION);
@@ -9055,8 +9236,13 @@ TEST_P(QuicConnectionTest, ValidClientConnectionId) {
   QuicFrames frames;
   QuicPingFrame ping_frame;
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&ping_frame));
+  frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(ping_frame));
   frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::unique_ptr<QuicPacket> packet =
       BuildUnsizedDataPacket(&peer_framer_, header, frames);
   char buffer[kMaxOutgoingPacketSize];
@@ -9083,8 +9269,13 @@ TEST_P(QuicConnectionTest, InvalidClientConnectionId) {
   QuicFrames frames;
   QuicPingFrame ping_frame;
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&ping_frame));
+  frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(ping_frame));
   frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::unique_ptr<QuicPacket> packet =
       BuildUnsizedDataPacket(&peer_framer_, header, frames);
   char buffer[kMaxOutgoingPacketSize];
@@ -9111,8 +9302,13 @@ TEST_P(QuicConnectionTest, UpdateClientConnectionIdFromFirstPacket) {
   QuicFrames frames;
   QuicPingFrame ping_frame;
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&ping_frame));
+  frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(ping_frame));
   frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   std::unique_ptr<QuicPacket> packet =
       BuildUnsizedDataPacket(&peer_framer_, header, frames);
   char buffer[kMaxOutgoingPacketSize];
@@ -9142,8 +9338,13 @@ void QuicConnectionTest::TestReplaceConnectionIdFromInitial() {
     QuicFrames frames;
     QuicPingFrame ping_frame;
     QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(&ping_frame));
+    frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(ping_frame));
     frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
     std::unique_ptr<QuicPacket> packet =
         BuildUnsizedDataPacket(&peer_framer_, header, frames);
     char buffer[kMaxOutgoingPacketSize];
@@ -9165,8 +9366,13 @@ void QuicConnectionTest::TestReplaceConnectionIdFromInitial() {
     QuicFrames frames;
     QuicPingFrame ping_frame;
     QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(&ping_frame));
+    frames.push_back(QuicFrame(&padding_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(ping_frame));
     frames.push_back(QuicFrame(padding_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
     std::unique_ptr<QuicPacket> packet =
         BuildUnsizedDataPacket(&peer_framer_, header, frames);
     char buffer[kMaxOutgoingPacketSize];
@@ -9257,7 +9463,11 @@ TEST_P(QuicConnectionTest, CoalescedPacket) {
     if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
       frames.push_back(QuicFrame(&crypto_frame_));
     } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     std::unique_ptr<QuicPacket> packet = ConstructPacket(header, frames);
     peer_creator_.set_encryption_level(encryption_levels[i]);
@@ -9295,14 +9505,22 @@ TEST_P(QuicConnectionTest, CoalescedPacketThatSavesFrames) {
         .Times(3)
         .WillRepeatedly([this](const QuicCryptoFrame& /*frame*/) {
           // QuicFrame takes ownership of the QuicBlockedFrame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+          connection_.SendControlFrame(QuicFrame(new QuicBlockedFrame(1, 3, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
           connection_.SendControlFrame(QuicFrame(QuicBlockedFrame(1, 3, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
         });
   } else {
     EXPECT_CALL(visitor_, OnStreamFrame(_))
         .Times(3)
         .WillRepeatedly([this](const QuicStreamFrame& /*frame*/) {
           // QuicFrame takes ownership of the QuicBlockedFrame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+          connection_.SendControlFrame(QuicFrame(new QuicBlockedFrame(1, 3, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
           connection_.SendControlFrame(QuicFrame(QuicBlockedFrame(1, 3, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
         });
   }
 
@@ -9318,7 +9536,11 @@ TEST_P(QuicConnectionTest, CoalescedPacketThatSavesFrames) {
     if (QuicVersionUsesCryptoFrames(connection_.transport_version())) {
       frames.push_back(QuicFrame(&crypto_frame_));
     } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
       frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     std::unique_ptr<QuicPacket> packet = ConstructPacket(header, frames);
     peer_creator_.set_encryption_level(encryption_levels[i]);
@@ -10003,8 +10225,13 @@ TEST_P(QuicConnectionTest, ClientReceivedHandshakeDone) {
   }
   EXPECT_CALL(visitor_, OnHandshakeDoneReceived());
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicHandshakeDoneFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicHandshakeDoneFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketAtLevel(1, frames, ENCRYPTION_FORWARD_SECURE);
 }
 
@@ -10020,8 +10247,13 @@ TEST_P(QuicConnectionTest, ServerReceivedHandshakeDone) {
   EXPECT_CALL(visitor_, OnConnectionClosed(_, ConnectionCloseSource::FROM_SELF))
       .WillOnce(Invoke(this, &QuicConnectionTest::SaveConnectionCloseFrame));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicHandshakeDoneFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicHandshakeDoneFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketAtLevel(1, frames, ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(1, connection_close_frame_count_);
   EXPECT_THAT(saved_connection_close_frame_.quic_error_code,
@@ -10393,8 +10625,13 @@ TEST_P(QuicConnectionTest, MaxStreamsFrameCausesConnectionClose) {
         return true;
       }));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicMaxStreamsFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicMaxStreamsFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketAtLevel(1, frames, ENCRYPTION_FORWARD_SECURE);
 }
 
@@ -10413,8 +10650,13 @@ TEST_P(QuicConnectionTest, StreamsBlockedFrameCausesConnectionClose) {
       }));
   QuicFrames frames;
   frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicStreamsBlockedFrame(kInvalidControlFrameId, 10, false)));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicStreamsBlockedFrame(kInvalidControlFrameId, 10, false)));
   frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketAtLevel(1, frames, ENCRYPTION_FORWARD_SECURE);
 }
 
@@ -10521,7 +10763,11 @@ TEST_P(QuicConnectionTest, DonotChangeQueuedAcks) {
   ProcessPacket(4);
   // Process a packet containing stream frame followed by ACK of packets 1.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicStreamFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicStreamFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       QuicUtils::GetFirstBidirectionalStreamId(
           connection_.version().transport_version, Perspective::IS_CLIENT),
       false, 0u, absl::string_view())));
@@ -10529,7 +10775,11 @@ TEST_P(QuicConnectionTest, DonotChangeQueuedAcks) {
   frames.push_back(QuicFrame(&ack_frame));
   // Receiving stream frame causes something to send.
   EXPECT_CALL(visitor_, OnStreamFrame(_)).WillOnce(Invoke([this]() {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    connection_.SendControlFrame(QuicFrame(new QuicWindowUpdateFrame(1, 0, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
     connection_.SendControlFrame(QuicFrame(QuicWindowUpdateFrame(1, 0, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     // Verify now the queued ACK contains packet number 2.
     EXPECT_TRUE(QuicPacketCreatorPeer::QueuedFrames(
                     QuicConnectionPeer::GetPacketCreator(&connection_))[0]
@@ -10916,8 +11166,13 @@ TEST_P(QuicConnectionTest, ServerRetransmitsHandshakeDataEarly) {
   connection_.NeuterUnencryptedPackets();
   // Receives PING from peer.
   frames.clear();
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPingFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(3)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPingFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(3)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketAtLevel(31, frames, ENCRYPTION_HANDSHAKE);
   EXPECT_EQ(clock_.Now() + kAlarmGranularity,
             connection_.GetAckAlarm()->deadline());
@@ -11231,7 +11486,11 @@ TEST_P(QuicConnectionTest, DoNotSendPing) {
   QuicFrames frames;
   QuicAckFrame ack_frame = InitAckFrame(1);
   frames.push_back(QuicFrame(&ack_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicStreamFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicStreamFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       GetNthClientInitiatedStreamId(0, connection_.transport_version()), true,
       0u, absl::string_view())));
   EXPECT_CALL(visitor_, OnSuccessfulVersionNegotiation(_));
@@ -11426,7 +11685,11 @@ TEST_P(QuicConnectionTest, PathValidationOnNewSocketSuccess) {
   EXPECT_EQ(0u, writer_->packets_write_attempts());
 
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().front().data_buffer)));
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -11652,7 +11915,11 @@ TEST_P(QuicConnectionTest, SendPathChallengeUsingBlockedDefaultSocket) {
     // address validation.
     QuicFrames frames;
     frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+        QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
         QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     ProcessFramesPacketWithAddresses(frames, kSelfAddress, kNewPeerAddress,
                                      ENCRYPTION_FORWARD_SECURE);
   } else {
@@ -11831,8 +12098,13 @@ TEST_P(QuicConnectionTest, ReceiveMultiplePathChallenge) {
   QuicPathFrameBuffer path_frame_buffer1{0, 1, 2, 3, 4, 5, 6, 7};
   QuicPathFrameBuffer path_frame_buffer2{8, 9, 10, 11, 12, 13, 14, 15};
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer1)));
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer2)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer1)));
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer2)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   const QuicSocketAddress kNewPeerAddress(QuicIpAddress::Loopback6(),
                                           /*port=*/23456);
 
@@ -11870,10 +12142,19 @@ TEST_P(QuicConnectionTest, ReceiveStreamFrameBeforePathChallenge) {
   PathProbeTestInit(Perspective::IS_SERVER);
 
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPathFrameBuffer path_frame_buffer{0, 1, 2, 3, 4, 5, 6, 7};
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer)));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer)));
   frames.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   const QuicSocketAddress kNewPeerAddress(QuicIpAddress::Loopback4(),
                                           /*port=*/23456);
 
@@ -11922,9 +12203,17 @@ TEST_P(QuicConnectionTest, ReceiveStreamFrameFollowingPathChallenge) {
 
   QuicFrames frames;
   QuicPathFrameBuffer path_frame_buffer{0, 1, 2, 3, 4, 5, 6, 7};
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   // PATH_RESPONSE should be flushed out before the rest packet is parsed.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   const QuicSocketAddress kNewPeerAddress(QuicIpAddress::Loopback4(),
                                           /*port=*/23456);
   QuicByteCount received_packet_size;
@@ -11982,10 +12271,19 @@ TEST_P(QuicConnectionTest, PathChallengeWithDataInOutOfOrderPacket) {
   PathProbeTestInit(Perspective::IS_SERVER);
 
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPathFrameBuffer path_frame_buffer{0, 1, 2, 3, 4, 5, 6, 7};
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer)));
+  frames.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer)));
   frames.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   const QuicSocketAddress kNewPeerAddress(QuicIpAddress::Loopback6(),
                                           /*port=*/23456);
 
@@ -12046,7 +12344,11 @@ TEST_P(QuicConnectionTest, FailToWritePathResponse) {
 
   QuicFrames frames;
   QuicPathFrameBuffer path_frame_buffer{0, 1, 2, 3, 4, 5, 6, 7};
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, path_frame_buffer)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, path_frame_buffer)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   const QuicSocketAddress kNewPeerAddress(QuicIpAddress::Loopback6(),
                                           /*port=*/23456);
 
@@ -13066,7 +13368,11 @@ TEST_P(QuicConnectionTest, MultiPortConnection) {
   clock_.AdvanceTime(kTestRTT);
 
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().back().data_buffer)));
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -13101,7 +13407,11 @@ TEST_P(QuicConnectionTest, MultiPortConnection) {
   // Fake a response delay.
   clock_.AdvanceTime(kTestRTT);
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().back().data_buffer)));
   ProcessFramesPacketWithAddresses(frames2, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -13315,7 +13625,11 @@ TEST_P(QuicConnectionTest, PathDegradingWhenAltPathIsNotReady) {
   // Even if the alt path is validated after path degrading, nothing should
   // happen.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().back().data_buffer)));
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -13381,7 +13695,11 @@ TEST_P(QuicConnectionTest, PathDegradingWhenAltPathIsReadyAndNotProbing) {
   // Even if the alt path is validated after path degrading, nothing should
   // happen.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().back().data_buffer)));
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -13460,7 +13778,11 @@ TEST_P(QuicConnectionTest, PathDegradingWhenAltPathIsReadyAndProbing) {
   // Even if the alt path is validated after path degrading, nothing should
   // happen.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(
+#endif  // !__CHERI_PURE_CAPABILITY__
       99, new_writer.path_challenge_frames().back().data_buffer)));
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
@@ -13508,7 +13830,11 @@ TEST_P(QuicConnectionTest, SingleAckInPacket) {
         ConnectionCloseBehavior::SEND_CONNECTION_CLOSE_PACKET);
   }));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   ASSERT_FALSE(writer_->ack_frames().empty());
@@ -13793,7 +14119,11 @@ TEST_P(QuicConnectionTest, PathChallengeBeforePeerIpAddressChangeAtServer) {
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames1;
   frames1.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPathFrameBuffer payload;
   EXPECT_CALL(*send_algorithm_,
               OnPacketSent(_, _, _, _, NO_RETRANSMITTABLE_DATA))
@@ -13833,7 +14163,11 @@ TEST_P(QuicConnectionTest, PathChallengeBeforePeerIpAddressChangeAtServer) {
               OnPacketSent(_, _, _, _, NO_RETRANSMITTABLE_DATA))
       .Times(0);
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kNewPeerAddress, connection_.peer_address());
@@ -13880,7 +14214,11 @@ TEST_P(QuicConnectionTest, PathChallengeBeforePeerIpAddressChangeAtServer) {
 
   // Receiving PATH_RESPONSE should lift the anti-amplification limit.
   QuicFrames frames3;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames3.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames3.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_CALL(visitor_, MaybeSendAddressToken());
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _))
       .Times(testing::AtLeast(1u));
@@ -13955,7 +14293,11 @@ TEST_P(QuicConnectionTest,
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames1;
   frames1.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames1, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_TRUE(connection_.HasPendingPathValidation());
@@ -13968,7 +14310,11 @@ TEST_P(QuicConnectionTest,
 
   // Receive PATH_RESPONSE should mark the new peer address validated.
   QuicFrames frames3;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames3.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames3.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames3, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
 
@@ -13987,7 +14333,11 @@ TEST_P(QuicConnectionTest,
   }));
   EXPECT_CALL(visitor_, MaybeSendAddressToken());
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewerPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kNewerPeerAddress, connection_.peer_address());
@@ -14071,7 +14421,11 @@ TEST_P(QuicConnectionTest, NoNonProbingFrameOnAlternativePath) {
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames1;
   frames1.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPathFrameBuffer payload;
   EXPECT_CALL(*send_algorithm_,
               OnPacketSent(_, _, _, _, NO_RETRANSMITTABLE_DATA))
@@ -14124,7 +14478,11 @@ TEST_P(QuicConnectionTest, NoNonProbingFrameOnAlternativePath) {
   // The 20th ACK should bundle with a WINDOW_UPDATE frame.
   EXPECT_CALL(visitor_, OnAckNeedsRetransmittableFrame())
       .WillOnce(Invoke([this]() {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        connection_.SendControlFrame(QuicFrame(new QuicWindowUpdateFrame(1, 0, 0)));
+#else   // !__CHERI_PURE_CAPABILITY__
         connection_.SendControlFrame(QuicFrame(QuicWindowUpdateFrame(1, 0, 0)));
+#endif  // !__CHERI_PURE_CAPABILITY__
       }));
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _))
       .WillOnce(Invoke([&]() {
@@ -14190,7 +14548,11 @@ TEST_P(QuicConnectionTest,
     EXPECT_EQ(kNewPeerAddress, connection_.peer_address());
   }));
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(&frame2_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(frame2_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kSelfAddress, kNewPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_TRUE(QuicConnectionPeer::IsAlternativePathValidated(&connection_));
@@ -14223,7 +14585,11 @@ TEST_P(QuicConnectionTest,
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames1;
   frames1.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames1, kSelfAddress, kNewerPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_EQ(kNewPeerAddress, connection_.effective_peer_address());
@@ -14766,7 +15132,11 @@ TEST_P(QuicConnectionTest, ServerRetireSelfIssuedConnectionId) {
   char buffers[3][kMaxOutgoingPacketSize];
   // Destination connection ID of packet1 is cid0.
   auto packet1 =
+#if defined(__CHERI_PURE_CAPABILITY__)
+      ConstructPacket({QuicFrame(new QuicPingFrame())}, ENCRYPTION_FORWARD_SECURE,
+#else   // !__CHERI_PURE_CAPABILITY__
       ConstructPacket({QuicFrame(QuicPingFrame())}, ENCRYPTION_FORWARD_SECURE,
+#endif  // !__CHERI_PURE_CAPABILITY__
                       buffers[0], kMaxOutgoingPacketSize);
   peer_creator_.SetServerConnectionId(cid1);
   auto retire_cid_frame = std::make_unique<QuicRetireConnectionIdFrame>();
@@ -14777,7 +15147,11 @@ TEST_P(QuicConnectionTest, ServerRetireSelfIssuedConnectionId) {
                                  kMaxOutgoingPacketSize);
   // Destination connection ID of packet3 is cid1.
   auto packet3 =
+#if defined(__CHERI_PURE_CAPABILITY__)
+      ConstructPacket({QuicFrame(new QuicPingFrame())}, ENCRYPTION_FORWARD_SECURE,
+#else   // !__CHERI_PURE_CAPABILITY__
       ConstructPacket({QuicFrame(QuicPingFrame())}, ENCRYPTION_FORWARD_SECURE,
+#endif  // !__CHERI_PURE_CAPABILITY__
                       buffers[2], kMaxOutgoingPacketSize);
 
   // Packet2 with RetireConnectionId frame trigers sending NewConnectionId
@@ -14959,12 +15333,20 @@ TEST_P(QuicConnectionTest, LostDataThenGetAcknowledged) {
   SendStreamDataToPeer(3, "foo", 9, NO_FIN, &last_packet);  // Packet 4
 
   // Process a PING packet to set peer address.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacket(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacket(QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Process a packet containing a STREAM_FRAME and an ACK with changed peer
   // address.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicAckFrame ack = InitAckFrame({{QuicPacketNumber(1), QuicPacketNumber(5)}});
   frames.push_back(QuicFrame(&ack));
 
@@ -15226,32 +15608,64 @@ TEST_P(QuicConnectionTest, AckElicitingFrames) {
     QuicFrames frames;
     // Add some padding to fullfill the min size requirement of header
     // protection.
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPaddingFrame(10)));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames.push_back(QuicFrame(QuicPaddingFrame(10)));
+#endif  // !__CHERI_PURE_CAPABILITY__
     switch (frame_type) {
       case PADDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicPaddingFrame(10));
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicPaddingFrame(10));
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case MTU_DISCOVERY_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicMtuDiscoveryFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicMtuDiscoveryFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case PING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicPingFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicPingFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case MAX_STREAMS_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicMaxStreamsFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicMaxStreamsFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STOP_WAITING_FRAME:
         // Not supported.
         skipped = true;
         break;
       case STREAMS_BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicStreamsBlockedFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicStreamsBlockedFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STREAM_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicStreamFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicStreamFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case HANDSHAKE_DONE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(new QuicHandshakeDoneFrame());
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(QuicHandshakeDoneFrame());
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case ACK_FRAME:
         frame = QuicFrame(&ack_frame);
@@ -15268,16 +15682,32 @@ TEST_P(QuicConnectionTest, AckElicitingFrames) {
         skipped = true;
         break;
       case BLOCKED_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(&blocked_frame);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(blocked_frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case WINDOW_UPDATE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(&window_update_frame);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(window_update_frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case PATH_CHALLENGE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(&path_challenge_frame);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(path_challenge_frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case STOP_SENDING_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(&stop_sending_frame);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(stop_sending_frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case NEW_CONNECTION_ID_FRAME:
         frame = QuicFrame(&new_connection_id_frame);
@@ -15286,7 +15716,11 @@ TEST_P(QuicConnectionTest, AckElicitingFrames) {
         frame = QuicFrame(&retire_connection_id_frame);
         break;
       case PATH_RESPONSE_FRAME:
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame = QuicFrame(&path_response_frame);
+#else   // !__CHERI_PURE_CAPABILITY__
         frame = QuicFrame(path_response_frame);
+#endif  // !__CHERI_PURE_CAPABILITY__
         break;
       case MESSAGE_FRAME:
         frame = QuicFrame(&message_frame);
@@ -15683,8 +16117,13 @@ TEST_P(QuicConnectionTest, ReportedAckDelayIncludesQueuingDelay) {
       ENCRYPTION_FORWARD_SECURE,
       std::make_unique<TaggingEncrypter>(ENCRYPTION_FORWARD_SECURE));
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPingFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPingFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicPacketHeader header =
       ConstructPacketHeader(30, ENCRYPTION_FORWARD_SECURE);
   std::unique_ptr<QuicPacket> packet(ConstructPacket(header, frames));
@@ -16142,7 +16581,11 @@ TEST_P(QuicConnectionTest, ClientValidatedServerPreferredAddress) {
 
   // Receive path response from server preferred address.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   // Verify send_algorithm gets reset after migration (new sent packet is not
   // updated to exsting send_algorithm_).
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _)).Times(0);
@@ -16213,7 +16656,11 @@ TEST_P(QuicConnectionTest, ClientValidatedServerPreferredAddress2) {
 
   // Receive path response from original server address.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   ASSERT_FALSE(connection_.HasPendingPathValidation());
@@ -16233,7 +16680,11 @@ TEST_P(QuicConnectionTest, ClientValidatedServerPreferredAddress2) {
   // Verify another packet from original server address gets processed.
   EXPECT_CALL(visitor_, OnStreamFrame(_)).Times(1);
   frames.clear();
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&frame1_));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(frame1_));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_TRUE(connection_.GetStats().server_preferred_address_validated);
@@ -16276,7 +16727,11 @@ TEST_P(QuicConnectionTest, ClientFailedToValidateServerPreferredAddress) {
   // Receive mismatched path challenge from original server address.
   QuicFrames frames;
   frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathResponseFrame(99, {0, 1, 2, 3, 4, 5, 6, 7})));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathResponseFrame(99, {0, 1, 2, 3, 4, 5, 6, 7})));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   ASSERT_TRUE(connection_.HasPendingPathValidation());
@@ -16485,7 +16940,11 @@ TEST_P(QuicConnectionTest, MultiPortCreationAfterServerMigration) {
   // Receiving PATH_RESPONSE should cause the connection to migrate to the
   // preferred address.
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames, kNewSelfAddress, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_FALSE(connection_.IsValidatingServerPreferredAddress());
@@ -16528,7 +16987,11 @@ TEST_P(QuicConnectionTest, MultiPortCreationAfterServerMigration) {
   auto* alt_path = QuicConnectionPeer::GetAlternativePath(&connection_);
   EXPECT_FALSE(alt_path->validated);
   QuicFrames frames2;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames2.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames2.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ProcessFramesPacketWithAddresses(frames2, kNewSelfAddress2, kPeerAddress,
                                    ENCRYPTION_FORWARD_SECURE);
   EXPECT_TRUE(alt_path->validated);
@@ -16594,7 +17057,11 @@ TEST_P(QuicConnectionTest, ClientReceivePathChallengeAfterServerMigration) {
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames1;
   frames1.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _))
       .Times(AtLeast(1))
       .WillOnce(Invoke([&]() {
@@ -16717,8 +17184,13 @@ TEST_P(QuicConnectionTest, ClientProbesAfterServerMigration) {
   QuicPathFrameBuffer path_challenge_payload{0, 1, 2, 3, 4, 5, 6, 7};
   QuicFrames frames;
   frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicPathChallengeFrame(0, path_challenge_payload)));
+  frames.push_back(QuicFrame(new QuicPathResponseFrame(99, payload)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicPathChallengeFrame(0, path_challenge_payload)));
   frames.push_back(QuicFrame(QuicPathResponseFrame(99, payload)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_CALL(*send_algorithm_, OnPacketSent(_, _, _, _, _))
       .Times(AtLeast(1))
       .WillOnce(Invoke([&]() {
@@ -16740,8 +17212,13 @@ TEST_P(QuicConnectionTest, ClientProbesAfterServerMigration) {
 TEST_P(QuicConnectionTest, EcnMarksCorrectlyRecorded) {
   set_perspective(Perspective::IS_SERVER);
   QuicFrames frames;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPingFrame()));
+  frames.push_back(QuicFrame(new QuicPaddingFrame(7)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.push_back(QuicFrame(QuicPingFrame()));
   frames.push_back(QuicFrame(QuicPaddingFrame(7)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   QuicAckFrame ack_frame =
       connection_.SupportsMultiplePacketNumberSpaces()
           ? connection_.received_packet_manager().GetAckFrame(APPLICATION_DATA)
@@ -16927,7 +17404,11 @@ TEST_P(QuicConnectionTest, EcnMarksUndecryptableCoalescedPacket) {
   }
   // Send PING packet with ECN_CE, which will change the ECN codepoint in
   // last_received_packet_info_.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  ProcessFramePacketAtLevelWithEcn(4, QuicFrame(new QuicPingFrame()),
+#else   // !__CHERI_PURE_CAPABILITY__
   ProcessFramePacketAtLevelWithEcn(4, QuicFrame(QuicPingFrame()),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                    ENCRYPTION_HANDSHAKE, ECN_CE);
   ack_frame =
       connection_.SupportsMultiplePacketNumberSpaces()
@@ -17265,7 +17746,11 @@ TEST_P(QuicConnectionTest, CoalescedPacketSplitsEcn) {
   creator_->set_encryption_level(ENCRYPTION_INITIAL);
   QuicFrames frames;
   QuicPingFrame ping;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.emplace_back(QuicFrame(&ping));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames.emplace_back(QuicFrame(ping));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SerializedPacket packet1 = QuicPacketCreatorPeer::SerializeAllFrames(
       creator_, frames, buffer, sizeof(buffer));
   connection_.SendOrQueuePacket(std::move(packet1));

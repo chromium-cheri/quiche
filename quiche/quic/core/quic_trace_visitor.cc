@@ -121,10 +121,17 @@ void QuicTraceVisitor::PopulateFrameInfo(const QuicFrame& frame,
 
       quic_trace::StreamFrameInfo* info =
           frame_record->mutable_stream_frame_info();
+#if defined(__CHERI_PURE_CAPABILITY__)
+      info->set_stream_id(frame.stream_frame->stream_id);
+      info->set_fin(frame.stream_frame->fin);
+      info->set_offset(frame.stream_frame->offset);
+      info->set_length(frame.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
       info->set_stream_id(frame.stream_frame.stream_id);
       info->set_fin(frame.stream_frame.fin);
       info->set_offset(frame.stream_frame.offset);
       info->set_length(frame.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
       break;
     }
 
@@ -173,28 +180,48 @@ void QuicTraceVisitor::PopulateFrameInfo(const QuicFrame& frame,
       break;
 
     case WINDOW_UPDATE_FRAME: {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      bool is_connection = frame.window_update_frame->stream_id == 0;
+#else   // !__CHERI_PURE_CAPABILITY__
       bool is_connection = frame.window_update_frame.stream_id == 0;
+#endif  // !__CHERI_PURE_CAPABILITY__
       frame_record->set_frame_type(is_connection ? quic_trace::MAX_DATA
                                                  : quic_trace::MAX_STREAM_DATA);
 
       quic_trace::FlowControlInfo* info =
           frame_record->mutable_flow_control_info();
+#if defined(__CHERI_PURE_CAPABILITY__)
+      info->set_max_data(frame.window_update_frame->max_data);
+#else   // !__CHERI_PURE_CAPABILITY__
       info->set_max_data(frame.window_update_frame.max_data);
+#endif  // !__CHERI_PURE_CAPABILITY__
       if (!is_connection) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        info->set_stream_id(frame.window_update_frame->stream_id);
+#else   // !__CHERI_PURE_CAPABILITY__
         info->set_stream_id(frame.window_update_frame.stream_id);
+#endif  // !__CHERI_PURE_CAPABILITY__
       }
       break;
     }
 
     case BLOCKED_FRAME: {
+#if defined(__CHERI_PURE_CAPABILITY__)
+      bool is_connection = frame.blocked_frame->stream_id == 0;
+#else   // !__CHERI_PURE_CAPABILITY__
       bool is_connection = frame.blocked_frame.stream_id == 0;
+#endif  // !__CHERI_PURE_CAPABILITY__
       frame_record->set_frame_type(is_connection ? quic_trace::BLOCKED
                                                  : quic_trace::STREAM_BLOCKED);
 
       quic_trace::FlowControlInfo* info =
           frame_record->mutable_flow_control_info();
       if (!is_connection) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+        info->set_stream_id(frame.window_update_frame->stream_id);
+#else   // !__CHERI_PURE_CAPABILITY__
         info->set_stream_id(frame.window_update_frame.stream_id);
+#endif  // !__CHERI_PURE_CAPABILITY__
       }
       break;
     }
@@ -269,7 +296,12 @@ void QuicTraceVisitor::OnWindowUpdateFrame(const QuicWindowUpdateFrame& frame,
   event->set_event_type(quic_trace::PACKET_RECEIVED);
   event->set_packet_number(connection_->GetLargestReceivedPacket().ToUint64());
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  PopulateFrameInfo(QuicFrame(const_cast<QuicWindowUpdateFrame *>(&frame)),
+                    event->add_frames());
+#else   // !__CHERI_PURE_CAPABILITY__
   PopulateFrameInfo(QuicFrame(frame), event->add_frames());
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 void QuicTraceVisitor::OnSuccessfulVersionNegotiation(

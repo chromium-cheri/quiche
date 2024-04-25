@@ -29,7 +29,11 @@ TEST(QuicCoalescedPacketTest, MaybeCoalescePacket) {
   QuicAckFrame ack_frame(InitAckFrame(1));
   packet1.nonretransmittable_frames.push_back(QuicFrame(&ack_frame));
   packet1.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicStreamFrame(1, true, 0, 100)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicStreamFrame(1, true, 0, 100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ASSERT_TRUE(coalesced.MaybeCoalescePacket(packet1, self_address, peer_address,
                                             &allocator, 1500, ECN_NOT_ECT));
   EXPECT_EQ(PTO_RETRANSMISSION,
@@ -51,7 +55,11 @@ TEST(QuicCoalescedPacketTest, MaybeCoalescePacket) {
 
   SerializedPacket packet3(QuicPacketNumber(3), PACKET_4BYTE_PACKET_NUMBER,
                            buffer, 500, false, false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet3.nonretransmittable_frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
   packet3.nonretransmittable_frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   packet3.encryption_level = ENCRYPTION_ZERO_RTT;
   packet3.transmission_type = LOSS_RETRANSMISSION;
   ASSERT_TRUE(coalesced.MaybeCoalescePacket(packet3, self_address, peer_address,
@@ -157,7 +165,11 @@ TEST(QuicCoalescedPacketTest, NeuterInitialPacket) {
   QuicAckFrame ack_frame(InitAckFrame(1));
   packet1.nonretransmittable_frames.push_back(QuicFrame(&ack_frame));
   packet1.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicStreamFrame(1, true, 0, 100)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicStreamFrame(1, true, 0, 100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ASSERT_TRUE(coalesced.MaybeCoalescePacket(packet1, self_address, peer_address,
                                             &allocator, 1500, ECN_NOT_ECT));
   EXPECT_EQ(PTO_RETRANSMISSION,
@@ -181,7 +193,11 @@ TEST(QuicCoalescedPacketTest, NeuterInitialPacket) {
 
   SerializedPacket packet2(QuicPacketNumber(3), PACKET_4BYTE_PACKET_NUMBER,
                            buffer, 500, false, false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet2.nonretransmittable_frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
   packet2.nonretransmittable_frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   packet2.encryption_level = ENCRYPTION_ZERO_RTT;
   packet2.transmission_type = LOSS_RETRANSMISSION;
   ASSERT_TRUE(coalesced.MaybeCoalescePacket(packet2, self_address, peer_address,
@@ -236,14 +252,22 @@ TEST(QuicCoalescedPacketTest, DoNotCoalesceDifferentEcn) {
   QuicAckFrame ack_frame(InitAckFrame(1));
   packet1.nonretransmittable_frames.push_back(QuicFrame(&ack_frame));
   packet1.retransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      QuicFrame(new QuicStreamFrame(1, true, 0, 100)));
+#else   // !__CHERI_PURE_CAPABILITY__
       QuicFrame(QuicStreamFrame(1, true, 0, 100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   ASSERT_TRUE(coalesced.MaybeCoalescePacket(packet1, self_address, peer_address,
                                             &allocator, 1500, ECN_ECT1));
   EXPECT_EQ(coalesced.ecn_codepoint(), ECN_ECT1);
 
   SerializedPacket packet2(QuicPacketNumber(2), PACKET_4BYTE_PACKET_NUMBER,
                            buffer, 500, false, false);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet2.nonretransmittable_frames.push_back(QuicFrame(new QuicPaddingFrame(100)));
+#else   // !__CHERI_PURE_CAPABILITY__
   packet2.nonretransmittable_frames.push_back(QuicFrame(QuicPaddingFrame(100)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   packet2.encryption_level = ENCRYPTION_ZERO_RTT;
   packet2.transmission_type = LOSS_RETRANSMISSION;
   EXPECT_FALSE(coalesced.MaybeCoalescePacket(

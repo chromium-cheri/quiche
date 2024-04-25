@@ -1776,16 +1776,32 @@ TEST_P(QuicSpdyStreamTest, HeaderStreamNotiferCorrespondingSpdyStream) {
   session_->OnStreamFrameRetransmitted(frame1);
 
   EXPECT_CALL(*ack_listener1, OnPacketAcked(7, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame1), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame1), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
   EXPECT_CALL(*ack_listener1, OnPacketAcked(5, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame2), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame2), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
   EXPECT_CALL(*ack_listener2, OnPacketAcked(7, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame3), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame3), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
   EXPECT_CALL(*ack_listener2, OnPacketAcked(5, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame4), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame4), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
 }
 
@@ -1978,19 +1994,31 @@ TEST_P(QuicSpdyStreamTest, HeadersAckNotReportedWriteOrBufferBody) {
   EXPECT_CALL(*mock_ack_listener, OnPacketAcked(body.length(), _));
   QuicStreamFrame frame(stream_->id(), false, 0,
                         absl::StrCat(header.AsStringView(), body));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
 
   EXPECT_CALL(*mock_ack_listener, OnPacketAcked(0, _));
   QuicStreamFrame frame2(stream_->id(), false, header.size() + body.length(),
                          header2.AsStringView());
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame2), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame2), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
 
   EXPECT_CALL(*mock_ack_listener, OnPacketAcked(body2.length(), _));
   QuicStreamFrame frame3(stream_->id(), true,
                          header.size() + body.length() + header2.size(), body2);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame3), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame3), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
 
   EXPECT_TRUE(
@@ -2025,7 +2053,11 @@ TEST_P(QuicSpdyStreamTest, HeadersAckNotReportedWriteBodySlices) {
   EXPECT_CALL(*mock_ack_listener,
               OnPacketAcked(body1.length() + body2.length(), _));
   QuicStreamFrame frame(stream_->id(), true, 0, data1 + data2);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(&frame), QuicTime::Delta::Zero(),
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(session_->OnFrameAcked(QuicFrame(frame), QuicTime::Delta::Zero(),
+#endif  // !__CHERI_PURE_CAPABILITY__
                                      QuicTime::Zero()));
 
   EXPECT_TRUE(

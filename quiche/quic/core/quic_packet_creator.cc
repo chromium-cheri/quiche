@@ -315,13 +315,22 @@ bool QuicPacketCreator::ConsumeDataToFillCurrentPacket(
   CreateStreamFrame(id, data_size, offset, fin, frame);
   // Explicitly disallow multi-packet CHLOs.
   if (GetQuicFlag(quic_enforce_single_packet_chlo) &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+      StreamFrameIsClientHello(*frame->stream_frame) &&
+      frame->stream_frame->data_length < data_size) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
       StreamFrameIsClientHello(frame->stream_frame) &&
       frame->stream_frame.data_length < data_size) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     const std::string error_details =
         "Client hello won't fit in a single packet.";
     QUIC_BUG(quic_bug_10752_5)
         << ENDPOINT << error_details << " Constructed stream frame length: "
+#if defined(__CHERI_PURE_CAPABILITY__)
+        << frame->stream_frame->data_length << " CHLO length: " << data_size;
+#else // defined(__CHERI_PURE_CAPABILITY__)
         << frame->stream_frame.data_length << " CHLO length: " << data_size;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     delegate_->OnUnrecoverableError(QUIC_CRYPTO_CHLO_TOO_LARGE, error_details);
     return false;
   }
@@ -419,7 +428,11 @@ void QuicPacketCreator::CreateStreamFrame(QuicStreamId id, size_t data_size,
       std::min<size_t>(BytesFree() - min_frame_size, data_size);
 
   bool set_fin = fin && bytes_consumed == data_size;  // Last frame.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  *frame = QuicFrame(new QuicStreamFrame(id, set_fin, offset, bytes_consumed));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   *frame = QuicFrame(QuicStreamFrame(id, set_fin, offset, bytes_consumed));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 }
 
 bool QuicPacketCreator::CreateCryptoFrame(EncryptionLevel level,
@@ -534,7 +547,11 @@ size_t QuicPacketCreator::ReserializeInitialPacketInCoalescedPacket(
   // Add necessary padding.
   if (padding_size > 0) {
     QUIC_DVLOG(2) << ENDPOINT << "Add padding of size: " << padding_size;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (!AddFrame(QuicFrame(new QuicPaddingFrame(padding_size)),
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (!AddFrame(QuicFrame(QuicPaddingFrame(padding_size)),
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                   packet.transmission_type)) {
       QUIC_BUG(quic_bug_10752_8)
           << ENDPOINT << "Failed to add padding of size " << padding_size
@@ -621,7 +638,11 @@ void QuicPacketCreator::CreateAndSerializeStreamFrame(
   const bool set_fin = fin && (bytes_consumed == remaining_data_size);
   QuicStreamFrame frame(id, set_fin, stream_offset, bytes_consumed);
   if (debug_delegate_ != nullptr) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    debug_delegate_->OnFrameAddedToPacket(QuicFrame(&frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
     debug_delegate_->OnFrameAddedToPacket(QuicFrame(frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
   QUIC_DVLOG(1) << ENDPOINT << "Adding frame: " << frame;
 
@@ -638,7 +659,11 @@ void QuicPacketCreator::CreateAndSerializeStreamFrame(
     needs_padding = false;
   }
   bool omit_frame_length = !needs_padding;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  if (!framer_->AppendTypeByte(QuicFrame(&frame), omit_frame_length, &writer)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
   if (!framer_->AppendTypeByte(QuicFrame(frame), omit_frame_length, &writer)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     QUIC_BUG(quic_bug_10752_10) << ENDPOINT << "AppendTypeByte failed";
     return;
   }
@@ -682,7 +707,11 @@ void QuicPacketCreator::CreateAndSerializeStreamFrame(
   packet_buffer.buffer = nullptr;
   packet_.release_encrypted_buffer = std::move(packet_buffer).release_buffer;
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  packet_.retransmittable_frames.push_back(QuicFrame(&frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   packet_.retransmittable_frames.push_back(QuicFrame(frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   OnSerializedPacket();
 }
 
@@ -700,7 +729,11 @@ bool QuicPacketCreator::HasPendingRetransmittableFrames() const {
 
 bool QuicPacketCreator::HasPendingStreamFramesOfStream(QuicStreamId id) const {
   for (const auto& frame : packet_.retransmittable_frames) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (frame.type == STREAM_FRAME && frame.stream_frame->stream_id == id) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (frame.type == STREAM_FRAME && frame.stream_frame.stream_id == id) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       return true;
     }
   }
@@ -728,7 +761,11 @@ size_t QuicPacketCreator::ExpansionOnNewFrameWithLastFrame(
     return 0;
   }
   if (VersionHasIetfQuicFrames(version)) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    return QuicDataWriter::GetVarInt62Len(last_frame.stream_frame->data_length);
+#else // defined(__CHERI_PURE_CAPABILITY__)
     return QuicDataWriter::GetVarInt62Len(last_frame.stream_frame.data_length);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
   return kQuicStreamPayloadLengthSize;
 }
@@ -767,7 +804,11 @@ QuicPacketCreator::MaybeBuildDataPacketWithChaosProtection(
       queued_frames_[1].type != PADDING_FRAME ||
       // Do not perform chaos protection if we do not have a known number of
       // padding bytes to work with.
+#if defined(__CHERI_PURE_CAPABILITY__)
+      queued_frames_[1].padding_frame->num_padding_bytes <= 0 ||
+#else // defined(__CHERI_PURE_CAPABILITY__)
       queued_frames_[1].padding_frame.num_padding_bytes <= 0 ||
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       // Chaos protection relies on the framer using a crypto data producer,
       // which is always the case in practice.
       framer_->data_producer() == nullptr) {
@@ -780,7 +821,11 @@ QuicPacketCreator::MaybeBuildDataPacketWithChaosProtection(
     return absl::nullopt;
   }
   QuicChaosProtector chaos_protector(
+#if defined(__CHERI_PURE_CAPABILITY__)
+      crypto_frame, queued_frames_[1].padding_frame->num_padding_bytes,
+#else // defined(__CHERI_PURE_CAPABILITY__)
       crypto_frame, queued_frames_[1].padding_frame.num_padding_bytes,
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       packet_size_, framer_, random_);
   return chaos_protector.BuildDataPacket(header, buffer);
 }
@@ -1036,7 +1081,11 @@ size_t QuicPacketCreator::BuildPaddedPathChallengePacket(
   QuicFrames frames;
 
   // Write a PATH_CHALLENGE frame, which has a random 8-byte payload
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(new QuicPathChallengeFrame(0, payload)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   frames.push_back(QuicFrame(QuicPathChallengeFrame(0, payload)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   if (debug_delegate_ != nullptr) {
     debug_delegate_->OnFrameAddedToPacket(frames.back());
@@ -1045,7 +1094,11 @@ size_t QuicPacketCreator::BuildPaddedPathChallengePacket(
   // Add padding to the rest of the packet in order to assess Path MTU
   // characteristics.
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&padding_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   frames.push_back(QuicFrame(padding_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   return framer_->BuildDataPacket(header, frames, buffer, packet_length, level);
 }
@@ -1066,7 +1119,11 @@ size_t QuicPacketCreator::BuildPathResponsePacket(
   QuicFrames frames;
   for (const QuicPathFrameBuffer& payload : payloads) {
     // Note that the control frame ID can be 0 since this is not retransmitted.
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(new QuicPathResponseFrame(0, payload)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
     frames.push_back(QuicFrame(QuicPathResponseFrame(0, payload)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     if (debug_delegate_ != nullptr) {
       debug_delegate_->OnFrameAddedToPacket(frames.back());
     }
@@ -1076,7 +1133,11 @@ size_t QuicPacketCreator::BuildPathResponsePacket(
     // Add padding to the rest of the packet in order to assess Path MTU
     // characteristics.
     QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames.push_back(QuicFrame(&padding_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
     frames.push_back(QuicFrame(padding_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   }
 
   return framer_->BuildDataPacket(header, frames, buffer, packet_length, level);
@@ -1089,11 +1150,19 @@ size_t QuicPacketCreator::BuildConnectivityProbingPacket(
 
   // Write a PING frame, which has no data payload.
   QuicPingFrame ping_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&ping_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   frames.push_back(QuicFrame(ping_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   // Add padding to the rest of the packet.
   QuicPaddingFrame padding_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames.push_back(QuicFrame(&padding_frame));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   frames.push_back(QuicFrame(padding_frame));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   return framer_->BuildDataPacket(header, frames, buffer, packet_length, level);
 }
@@ -1360,7 +1429,11 @@ QuicConsumedData QuicPacketCreator::ConsumeData(QuicStreamId id,
     }
 
     // A stream frame is created and added.
+#if defined(__CHERI_PURE_CAPABILITY__)
+    size_t bytes_consumed = frame.stream_frame->data_length;
+#else // defined(__CHERI_PURE_CAPABILITY__)
     size_t bytes_consumed = frame.stream_frame.data_length;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     total_bytes_consumed += bytes_consumed;
     fin_consumed = fin && total_bytes_consumed == write_length;
     if (fin_consumed && state == FIN_AND_PADDING) {
@@ -1495,7 +1568,11 @@ void QuicPacketCreator::GenerateMtuDiscoveryPacket(QuicByteCount target_mtu) {
   // The MTU discovery frame is allocated on the stack, since it is going to be
   // serialized within this function.
   QuicMtuDiscoveryFrame mtu_discovery_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(&mtu_discovery_frame);
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicFrame frame(mtu_discovery_frame);
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
   // Send the probe packet with the new length.
   SetMaxPacketLength(target_mtu);
@@ -1720,7 +1797,11 @@ bool QuicPacketCreator::AddFrame(const QuicFrame& frame,
                 << transmission_type << ": " << frame;
   if (frame.type == STREAM_FRAME &&
       !QuicUtils::IsCryptoStreamId(framer_->transport_version(),
+#if defined(__CHERI_PURE_CAPABILITY__)
+                                   frame.stream_frame->stream_id) &&
+#else // defined(__CHERI_PURE_CAPABILITY__)
                                    frame.stream_frame.stream_id) &&
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       AttemptingToSendUnencryptedStreamData()) {
     return false;
   }
@@ -1742,7 +1823,11 @@ bool QuicPacketCreator::AddFrame(const QuicFrame& frame,
       << packet_.encryption_level;
 
   if (frame.type == STREAM_FRAME) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (MaybeCoalesceStreamFrame(*frame.stream_frame)) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
     if (MaybeCoalesceStreamFrame(frame.stream_frame)) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       LogCoalesceStreamFrameStatus(true);
       return true;
     } else {
@@ -1784,11 +1869,19 @@ bool QuicPacketCreator::AddFrame(const QuicFrame& frame,
     }
   } else {
     if (frame.type == PADDING_FRAME &&
+#if defined(__CHERI_PURE_CAPABILITY__)
+        frame.padding_frame->num_padding_bytes == -1) {
+#else // defined(__CHERI_PURE_CAPABILITY__)
         frame.padding_frame.num_padding_bytes == -1) {
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       // Populate the actual length of full padding frame, such that one can
       // know how much padding is actually added.
       packet_.nonretransmittable_frames.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          QuicFrame(new QuicPaddingFrame(frame_len)));
+#else // defined(__CHERI_PURE_CAPABILITY__)
           QuicFrame(QuicPaddingFrame(frame_len)));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     } else {
       packet_.nonretransmittable_frames.push_back(frame);
     }
@@ -1845,7 +1938,11 @@ bool QuicPacketCreator::MaybeCoalesceStreamFrame(const QuicStreamFrame& frame) {
   if (queued_frames_.empty() || queued_frames_.back().type != STREAM_FRAME) {
     return false;
   }
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicStreamFrame* candidate = queued_frames_.back().stream_frame;
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicStreamFrame* candidate = &queued_frames_.back().stream_frame;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   if (candidate->stream_id != frame.stream_id ||
       candidate->offset + candidate->data_length != frame.offset ||
       frame.data_length > BytesFree()) {
@@ -1859,7 +1956,11 @@ bool QuicPacketCreator::MaybeCoalesceStreamFrame(const QuicStreamFrame& frame) {
   QUICHE_DCHECK_EQ(packet_.retransmittable_frames.back().type, STREAM_FRAME)
       << ENDPOINT;
   QuicStreamFrame* retransmittable =
+#if defined(__CHERI_PURE_CAPABILITY__)
+      packet_.retransmittable_frames.back().stream_frame;
+#else // defined(__CHERI_PURE_CAPABILITY__)
       &packet_.retransmittable_frames.back().stream_frame;
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   QUICHE_DCHECK_EQ(retransmittable->stream_id, frame.stream_id) << ENDPOINT;
   QUICHE_DCHECK_EQ(retransmittable->offset + retransmittable->data_length,
                    frame.offset)
@@ -1931,7 +2032,11 @@ void QuicPacketCreator::MaybeAddPadding() {
     }
     // AddFrame cannot be used here because it adds the frame to the end of the
     // packet.
+#if defined(__CHERI_PURE_CAPABILITY__)
+    QuicFrame frame{new QuicPaddingFrame(padding_bytes)};
+#else // defined(__CHERI_PURE_CAPABILITY__)
     QuicFrame frame{QuicPaddingFrame(padding_bytes)};
+#endif // defined(__CHERI_PURE_CAPABILITY__)
     queued_frames_.insert(queued_frames_.begin(), frame);
     packet_size_ += padding_bytes;
     packet_.nonretransmittable_frames.push_back(frame);
@@ -1940,7 +2045,11 @@ void QuicPacketCreator::MaybeAddPadding() {
           packet_.bytes_not_retransmitted.value_or(0) + padding_bytes);
     }
   } else {
+#if defined(__CHERI_PURE_CAPABILITY__)
+    bool success = AddFrame(QuicFrame(new QuicPaddingFrame(padding_bytes)),
+#else // defined(__CHERI_PURE_CAPABILITY__)
     bool success = AddFrame(QuicFrame(QuicPaddingFrame(padding_bytes)),
+#endif // defined(__CHERI_PURE_CAPABILITY__)
                             packet_.transmission_type);
     QUIC_BUG_IF(quic_bug_10752_36, !success)
         << ENDPOINT << "Failed to add padding_bytes: " << padding_bytes
@@ -2218,7 +2327,11 @@ void QuicPacketCreator::AddPathChallengeFrame(
       << "Packet flusher is not attached when "
          "generator tries to write stream data.";
   // Write a PATH_CHALLENGE frame, which has a random 8-byte payload.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(new QuicPathChallengeFrame(0, payload));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicFrame frame(QuicPathChallengeFrame(0, payload));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   if (AddPaddedFrameWithRetry(frame)) {
     return;
   }
@@ -2232,7 +2345,11 @@ void QuicPacketCreator::AddPathChallengeFrame(
 
 bool QuicPacketCreator::AddPathResponseFrame(
     const QuicPathFrameBuffer& data_buffer) {
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame frame(new QuicPathResponseFrame(kInvalidControlFrameId, data_buffer));
+#else // defined(__CHERI_PURE_CAPABILITY__)
   QuicFrame frame(QuicPathResponseFrame(kInvalidControlFrameId, data_buffer));
+#endif // defined(__CHERI_PURE_CAPABILITY__)
   if (AddPaddedFrameWithRetry(frame)) {
     return true;
   }

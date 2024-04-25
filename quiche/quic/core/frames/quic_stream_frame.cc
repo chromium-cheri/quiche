@@ -9,7 +9,11 @@
 
 namespace quic {
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+QuicStreamFrame::QuicStreamFrame() {}
+#else // defined(__CHERI_PURE_CAPABILITY__)
 QuicStreamFrame::QuicStreamFrame() : QuicInlinedFrame(STREAM_FRAME) {}
+#endif // defined(__CHERI_PURE_CAPABILITY__)
 
 QuicStreamFrame::QuicStreamFrame(QuicStreamId stream_id, bool fin,
                                  QuicStreamOffset offset,
@@ -25,8 +29,12 @@ QuicStreamFrame::QuicStreamFrame(QuicStreamId stream_id, bool fin,
                                  QuicStreamOffset offset,
                                  const char* data_buffer,
                                  QuicPacketLength data_length)
+#if defined(__CHERI_PURE_CAPABILITY__)
+    : fin(fin),
+#else // defined(__CHERI_PURE_CAPABILITY__)
     : QuicInlinedFrame(STREAM_FRAME),
       fin(fin),
+#endif // defined(__CHERI_PURE_CAPABILITY__)
       data_length(data_length),
       stream_id(stream_id),
       data_buffer(data_buffer),

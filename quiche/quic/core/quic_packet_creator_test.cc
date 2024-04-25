@@ -198,16 +198,32 @@ class QuicPacketCreatorTest : public QuicTestWithParam<TestParams> {
                         const std::string& data, QuicStreamOffset offset,
                         bool fin) {
     EXPECT_EQ(STREAM_FRAME, frame.type);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    EXPECT_EQ(stream_id, frame.stream_frame->stream_id);
+#else   // !__CHERI_PURE_CAPABILITY__
     EXPECT_EQ(stream_id, frame.stream_frame.stream_id);
+#endif  // !__CHERI_PURE_CAPABILITY__
     char buf[kMaxOutgoingPacketSize];
     QuicDataWriter writer(kMaxOutgoingPacketSize, buf, quiche::HOST_BYTE_ORDER);
+#if defined(__CHERI_PURE_CAPABILITY__)
+    if (frame.stream_frame->data_length > 0) {
+      producer_.WriteStreamData(stream_id, frame.stream_frame->offset,
+                                frame.stream_frame->data_length, &writer);
+#else   // !__CHERI_PURE_CAPABILITY__
     if (frame.stream_frame.data_length > 0) {
       producer_.WriteStreamData(stream_id, frame.stream_frame.offset,
                                 frame.stream_frame.data_length, &writer);
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
+#if defined(__CHERI_PURE_CAPABILITY__)
+    EXPECT_EQ(data, absl::string_view(buf, frame.stream_frame->data_length));
+    EXPECT_EQ(offset, frame.stream_frame->offset);
+    EXPECT_EQ(fin, frame.stream_frame->fin);
+#else   // !__CHERI_PURE_CAPABILITY__
     EXPECT_EQ(data, absl::string_view(buf, frame.stream_frame.data_length));
     EXPECT_EQ(offset, frame.stream_frame.offset);
     EXPECT_EQ(fin, frame.stream_frame.fin);
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
 
   // Returns the number of bytes consumed by the header of packet, including
@@ -290,7 +306,11 @@ TEST_P(QuicPacketCreatorTest, SerializeFrames) {
       QuicStreamId stream_id = QuicUtils::GetFirstBidirectionalStreamId(
           client_framer_.transport_version(), Perspective::IS_CLIENT);
       frames_.push_back(QuicFrame(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          new QuicStreamFrame(stream_id, false, 0u, absl::string_view())));
+#else   // !__CHERI_PURE_CAPABILITY__
           QuicStreamFrame(stream_id, false, 0u, absl::string_view())));
+#endif  // !__CHERI_PURE_CAPABILITY__
       has_stream = true;
       payload_len += 2;
     }
@@ -374,7 +394,11 @@ TEST_P(QuicPacketCreatorTest, ConsumeDataToFillCurrentPacket) {
   const std::string data("test");
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  size_t consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   size_t consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, consumed);
   CheckStreamFrame(frame, stream_id, "test", 0u, false);
   EXPECT_TRUE(creator_.HasPendingFrames());
@@ -388,7 +412,11 @@ TEST_P(QuicPacketCreatorTest, ConsumeDataFin) {
   const std::string data("test");
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, true, false, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  size_t consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   size_t consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, consumed);
   CheckStreamFrame(frame, stream_id, "test", 0u, true);
   EXPECT_TRUE(creator_.HasPendingFrames());
@@ -401,7 +429,11 @@ TEST_P(QuicPacketCreatorTest, ConsumeDataFinOnly) {
       client_framer_.transport_version(), Perspective::IS_CLIENT);
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, {}, 0u, true, false, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  size_t consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   size_t consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(0u, consumed);
   CheckStreamFrame(frame, stream_id, std::string(), 0u, true);
   EXPECT_TRUE(creator_.HasPendingFrames());
@@ -436,7 +468,11 @@ TEST_P(QuicPacketCreatorTest, CreateAllFreeBytesForStreamFrames) {
       ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
           GetNthClientInitiatedStreamId(1), data, kOffset, false, false,
           NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+      size_t bytes_consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
       size_t bytes_consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
       EXPECT_LT(0u, bytes_consumed);
       creator_.FlushCurrentPacket();
     }
@@ -509,7 +545,11 @@ TEST_P(QuicPacketCreatorTest, CryptoStreamFramePacketPadding) {
       ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
           QuicUtils::GetCryptoStreamId(client_framer_.transport_version()),
           data, kOffset, false, true, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+      size_t bytes_consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
       size_t bytes_consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
       EXPECT_LT(0u, bytes_consumed);
     } else {
       producer_.SaveCryptoData(ENCRYPTION_INITIAL, kOffset, data);
@@ -555,7 +595,11 @@ TEST_P(QuicPacketCreatorTest, NonCryptoStreamFramePacketNonPadding) {
     ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
         GetNthClientInitiatedStreamId(1), data, kOffset, false, false,
         NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+    size_t bytes_consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
     size_t bytes_consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
     EXPECT_LT(0u, bytes_consumed);
     creator_.FlushCurrentPacket();
     ASSERT_TRUE(serialized_packet_->encrypted_buffer);
@@ -1244,7 +1288,11 @@ TEST_P(QuicPacketCreatorTest, SerializeFrame) {
     QuicStreamFrame stream_frame(
         QuicUtils::GetCryptoStreamId(client_framer_.transport_version()),
         /*fin=*/false, 0u, absl::string_view());
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames_.push_back(QuicFrame(&stream_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames_.push_back(QuicFrame(stream_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   } else {
     producer_.SaveCryptoData(ENCRYPTION_INITIAL, 0, data);
     frames_.push_back(
@@ -1281,7 +1329,11 @@ TEST_P(QuicPacketCreatorTest, SerializeFrameShortData) {
     QuicStreamFrame stream_frame(
         QuicUtils::GetCryptoStreamId(client_framer_.transport_version()),
         /*fin=*/false, 0u, absl::string_view());
+#if defined(__CHERI_PURE_CAPABILITY__)
+    frames_.push_back(QuicFrame(&stream_frame));
+#else   // !__CHERI_PURE_CAPABILITY__
     frames_.push_back(QuicFrame(stream_frame));
+#endif  // !__CHERI_PURE_CAPABILITY__
   } else {
     producer_.SaveCryptoData(ENCRYPTION_INITIAL, 0, data);
     frames_.push_back(
@@ -1319,7 +1371,11 @@ void QuicPacketCreatorTest::TestChaosProtection(bool enabled) {
   producer_.SaveCryptoData(ENCRYPTION_INITIAL, 0, data);
   frames_.push_back(
       QuicFrame(new QuicCryptoFrame(ENCRYPTION_INITIAL, 0, data.length())));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames_.push_back(QuicFrame(new QuicPaddingFrame(33)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames_.push_back(QuicFrame(QuicPaddingFrame(33)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SerializedPacket serialized = SerializeAllFrames(frames_);
   EXPECT_CALL(framer_visitor_, OnPacket());
   EXPECT_CALL(framer_visitor_, OnUnauthenticatedPublicHeader(_));
@@ -1364,7 +1420,11 @@ TEST_P(QuicPacketCreatorTest, ConsumeDataLargerThanOneStreamFrame) {
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, too_long_payload, 0u, true, false, NOT_RETRANSMISSION,
       &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  size_t consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   size_t consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   // The entire payload could not be consumed.
   EXPECT_GT(payload_length, consumed);
   creator_.FlushCurrentPacket();
@@ -1412,14 +1472,22 @@ TEST_P(QuicPacketCreatorTest, AddFrameAndFlush) {
   EXPECT_CALL(debug, OnFrameAddedToPacket(_));
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  size_t consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
   size_t consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, consumed);
   EXPECT_TRUE(creator_.HasPendingFrames());
   EXPECT_TRUE(creator_.HasPendingStreamFramesOfStream(stream_id));
 
   QuicPaddingFrame padding_frame;
   EXPECT_CALL(debug, OnFrameAddedToPacket(_));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_TRUE(creator_.AddFrame(QuicFrame(&padding_frame), NOT_RETRANSMISSION));
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(creator_.AddFrame(QuicFrame(padding_frame), NOT_RETRANSMISSION));
+#endif  // !__CHERI_PURE_CAPABILITY__
   EXPECT_TRUE(creator_.HasPendingFrames());
   EXPECT_EQ(0u, creator_.BytesFree());
 
@@ -1540,7 +1608,11 @@ TEST_P(QuicPacketCreatorTest, AddUnencryptedStreamDataClosesConnection) {
   EXPECT_QUIC_BUG(
       {
         EXPECT_CALL(delegate_, OnUnrecoverableError(_, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+        creator_.AddFrame(QuicFrame(&stream_frame), NOT_RETRANSMISSION);
+#else   // !__CHERI_PURE_CAPABILITY__
         creator_.AddFrame(QuicFrame(stream_frame), NOT_RETRANSMISSION);
+#endif  // !__CHERI_PURE_CAPABILITY__
       },
       "Cannot send stream data with level: ENCRYPTION_INITIAL");
 }
@@ -1557,7 +1629,11 @@ TEST_P(QuicPacketCreatorTest, SendStreamDataWithEncryptionHandshake) {
   EXPECT_QUIC_BUG(
       {
         EXPECT_CALL(delegate_, OnUnrecoverableError(_, _));
+#if defined(__CHERI_PURE_CAPABILITY__)
+        creator_.AddFrame(QuicFrame(&stream_frame), NOT_RETRANSMISSION);
+#else   // !__CHERI_PURE_CAPABILITY__
         creator_.AddFrame(QuicFrame(stream_frame), NOT_RETRANSMISSION);
+#endif  // !__CHERI_PURE_CAPABILITY__
       },
       "Cannot send stream data with level: ENCRYPTION_HANDSHAKE");
 }
@@ -1896,16 +1972,28 @@ TEST_P(QuicPacketCreatorTest, PacketTransmissionType) {
 
   QuicStreamId stream_id = QuicUtils::GetFirstBidirectionalStreamId(
       client_framer_.transport_version(), Perspective::IS_CLIENT);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame stream_frame(new QuicStreamFrame(stream_id,
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame stream_frame(QuicStreamFrame(stream_id,
+#endif  // !__CHERI_PURE_CAPABILITY__
                                          /*fin=*/false, 0u,
                                          absl::string_view()));
   ASSERT_TRUE(QuicUtils::IsRetransmittableFrame(stream_frame.type));
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame stream_frame_2(new QuicStreamFrame(stream_id,
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame stream_frame_2(QuicStreamFrame(stream_id,
+#endif  // !__CHERI_PURE_CAPABILITY__
                                            /*fin=*/false, 1u,
                                            absl::string_view()));
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  QuicFrame padding_frame{new QuicPaddingFrame()};
+#else   // !__CHERI_PURE_CAPABILITY__
   QuicFrame padding_frame{QuicPaddingFrame()};
+#endif  // !__CHERI_PURE_CAPABILITY__
   ASSERT_FALSE(QuicUtils::IsRetransmittableFrame(padding_frame.type));
 
   EXPECT_CALL(delegate_, OnSerializedPacket(_))
@@ -1946,7 +2034,11 @@ TEST_P(QuicPacketCreatorTest,
   // ConsumeDataToFillCurrentPacket calls AddFrame
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, PTO_RETRANSMISSION, &stream_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(4u, stream_frame.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, stream_frame.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   EXPECT_CALL(delegate_, OnSerializedPacket(_))
       .WillOnce(Invoke(this, &QuicPacketCreatorTest::SaveSerializedPacket));
@@ -1974,7 +2066,11 @@ TEST_P(QuicPacketCreatorTest,
   // ConsumeDataToFillCurrentPacket calls AddFrame
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, NOT_RETRANSMISSION, &stream_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(4u, stream_frame.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, stream_frame.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   EXPECT_CALL(delegate_, OnSerializedPacket(_))
       .WillOnce(Invoke(this, &QuicPacketCreatorTest::SaveSerializedPacket));
@@ -2001,13 +2097,21 @@ TEST_P(QuicPacketCreatorTest, PacketBytesRetransmitted_AddFrame_MixedFrames) {
   // ConsumeDataToFillCurrentPacket calls AddFrame
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, NOT_RETRANSMISSION, &stream_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(4u, stream_frame.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, stream_frame.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   QuicFrame stream_frame2;
   // ConsumeDataToFillCurrentPacket calls AddFrame
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id, data, 0u, false, false, LOSS_RETRANSMISSION, &stream_frame2));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(4u, stream_frame2.stream_frame->data_length);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(4u, stream_frame2.stream_frame.data_length);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   EXPECT_CALL(delegate_, OnSerializedPacket(_))
       .WillOnce(Invoke(this, &QuicPacketCreatorTest::SaveSerializedPacket));
@@ -2077,7 +2181,11 @@ TEST_P(QuicPacketCreatorTest, RetryToken) {
   creator_.SetRetryToken(
       std::string(retry_token_bytes, sizeof(retry_token_bytes)));
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames_.push_back(QuicFrame(new QuicPingFrame()));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames_.push_back(QuicFrame(QuicPingFrame()));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SerializedPacket serialized = SerializeAllFrames(frames_);
 
   QuicPacketHeader header;
@@ -2162,7 +2270,11 @@ TEST_P(QuicPacketCreatorTest, CoalesceStreamFrames) {
   EXPECT_CALL(debug, OnStreamFrameCoalesced(target));
   ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
       stream_id1, data2, 4u, true, false, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(frame.stream_frame->data_length,
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(frame.stream_frame.data_length,
+#endif  // !__CHERI_PURE_CAPABILITY__
             creator_.PacketSize() - previous_size);
 
   // frame is for another stream, so it won't be coalesced.
@@ -2198,7 +2310,11 @@ TEST_P(QuicPacketCreatorTest, CoalesceStreamFrames) {
 TEST_P(QuicPacketCreatorTest, SaveNonRetransmittableFrames) {
   QuicAckFrame ack_frame(InitAckFrame(1));
   frames_.push_back(QuicFrame(&ack_frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+  frames_.push_back(QuicFrame(new QuicPaddingFrame(-1)));
+#else   // !__CHERI_PURE_CAPABILITY__
   frames_.push_back(QuicFrame(QuicPaddingFrame(-1)));
+#endif  // !__CHERI_PURE_CAPABILITY__
   SerializedPacket serialized = SerializeAllFrames(frames_);
   ASSERT_EQ(2u, serialized.nonretransmittable_frames.size());
   EXPECT_EQ(ACK_FRAME, serialized.nonretransmittable_frames[0].type);
@@ -2207,7 +2323,11 @@ TEST_P(QuicPacketCreatorTest, SaveNonRetransmittableFrames) {
   // bytes of padding.
   EXPECT_LT(
       0,
+#if defined(__CHERI_PURE_CAPABILITY__)
+      serialized.nonretransmittable_frames[1].padding_frame->num_padding_bytes);
+#else   // !__CHERI_PURE_CAPABILITY__
       serialized.nonretransmittable_frames[1].padding_frame.num_padding_bytes);
+#endif  // !__CHERI_PURE_CAPABILITY__
   frames_.clear();
 
   // Serialize another packet with the same frames.
@@ -2232,7 +2352,11 @@ TEST_P(QuicPacketCreatorTest, SerializeCoalescedPacket) {
     }
     if (level != ENCRYPTION_INITIAL && level != ENCRYPTION_HANDSHAKE) {
       frames_.push_back(
+#if defined(__CHERI_PURE_CAPABILITY__)
+          QuicFrame(new QuicStreamFrame(1, false, 0u, absl::string_view())));
+#else   // !__CHERI_PURE_CAPABILITY__
           QuicFrame(QuicStreamFrame(1, false, 0u, absl::string_view())));
+#endif  // !__CHERI_PURE_CAPABILITY__
     }
     SerializedPacket serialized = SerializeAllFrames(frames_);
     EXPECT_EQ(level, serialized.encryption_level);
@@ -2341,7 +2465,11 @@ TEST_P(QuicPacketCreatorTest, SoftMaxPacketLength) {
     ASSERT_TRUE(creator_.ConsumeDataToFillCurrentPacket(
         QuicUtils::GetCryptoStreamId(client_framer_.transport_version()), data,
         kOffset, false, true, NOT_RETRANSMISSION, &frame));
+#if defined(__CHERI_PURE_CAPABILITY__)
+    size_t bytes_consumed = frame.stream_frame->data_length;
+#else   // !__CHERI_PURE_CAPABILITY__
     size_t bytes_consumed = frame.stream_frame.data_length;
+#endif  // !__CHERI_PURE_CAPABILITY__
     EXPECT_LT(0u, bytes_consumed);
   } else {
     producer_.SaveCryptoData(ENCRYPTION_INITIAL, kOffset, data);
@@ -3139,9 +3267,17 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataFastPath) {
   EXPECT_TRUE(!packet.retransmittable_frames.empty());
   EXPECT_EQ(LOSS_RETRANSMISSION, packet.transmission_type);
   EXPECT_EQ(STREAM_FRAME, packet.retransmittable_frames.front().type);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const QuicStreamFrame* stream_frame =
+#else   // !__CHERI_PURE_CAPABILITY__
   const QuicStreamFrame& stream_frame =
+#endif  // !__CHERI_PURE_CAPABILITY__
       packet.retransmittable_frames.front().stream_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(10000u, stream_frame->data_length + stream_frame->offset);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(10000u, stream_frame.data_length + stream_frame.offset);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLarge) {
@@ -3167,9 +3303,17 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLarge) {
   SerializedPacket& packet = packets_.back();
   EXPECT_TRUE(!packet.retransmittable_frames.empty());
   EXPECT_EQ(STREAM_FRAME, packet.retransmittable_frames.front().type);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const QuicStreamFrame* stream_frame =
+#else   // !__CHERI_PURE_CAPABILITY__
   const QuicStreamFrame& stream_frame =
+#endif  // !__CHERI_PURE_CAPABILITY__
       packet.retransmittable_frames.front().stream_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(10000u, stream_frame->data_length + stream_frame->offset);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(10000u, stream_frame.data_length + stream_frame.offset);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLargeSendAckFalse) {
@@ -3209,9 +3353,17 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLargeSendAckFalse) {
   SerializedPacket& packet = packets_.back();
   EXPECT_TRUE(!packet.retransmittable_frames.empty());
   EXPECT_EQ(STREAM_FRAME, packet.retransmittable_frames.front().type);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const QuicStreamFrame* stream_frame =
+#else   // !__CHERI_PURE_CAPABILITY__
   const QuicStreamFrame& stream_frame =
+#endif  // !__CHERI_PURE_CAPABILITY__
       packet.retransmittable_frames.front().stream_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(10000u, stream_frame->data_length + stream_frame->offset);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(10000u, stream_frame.data_length + stream_frame.offset);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLargeSendAckTrue) {
@@ -3237,9 +3389,17 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, ConsumeDataLargeSendAckTrue) {
   SerializedPacket& packet = packets_.back();
   EXPECT_TRUE(!packet.retransmittable_frames.empty());
   EXPECT_EQ(STREAM_FRAME, packet.retransmittable_frames.front().type);
+#if defined(__CHERI_PURE_CAPABILITY__)
+  const QuicStreamFrame* stream_frame =
+#else   // !__CHERI_PURE_CAPABILITY__
   const QuicStreamFrame& stream_frame =
+#endif  // !__CHERI_PURE_CAPABILITY__
       packet.retransmittable_frames.front().stream_frame;
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(10000u, stream_frame->data_length + stream_frame->offset);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(10000u, stream_frame.data_length + stream_frame.offset);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_F(QuicPacketCreatorMultiplePacketsTest, NotWritableThenBatchOperations) {
@@ -3383,7 +3543,11 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, PacketTransmissionType) {
   ASSERT_TRUE(packets_[0].encrypted_buffer);
   ASSERT_EQ(1u, packets_[0].retransmittable_frames.size());
   EXPECT_EQ(stream1_id,
+#if defined(__CHERI_PURE_CAPABILITY__)
+            packets_[0].retransmittable_frames[0].stream_frame->stream_id);
+#else   // !__CHERI_PURE_CAPABILITY__
             packets_[0].retransmittable_frames[0].stream_frame.stream_id);
+#endif  // !__CHERI_PURE_CAPABILITY__
 
   // Since the second frame was not added, the packet's transmission type
   // should be the first frame's type.
@@ -3922,7 +4086,11 @@ TEST_F(QuicPacketCreatorMultiplePacketsTest, ExtraPaddingNeeded) {
   ASSERT_FALSE(packets_[0].nonretransmittable_frames.empty());
   QuicFrame padding = packets_[0].nonretransmittable_frames[0];
   // Verify stream frame expansion is excluded.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  EXPECT_EQ(padding.padding_frame->num_padding_bytes, 1);
+#else   // !__CHERI_PURE_CAPABILITY__
   EXPECT_EQ(padding.padding_frame.num_padding_bytes, 1);
+#endif  // !__CHERI_PURE_CAPABILITY__
 }
 
 TEST_F(QuicPacketCreatorMultiplePacketsTest,
