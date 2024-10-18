@@ -65,9 +65,13 @@ class QUIC_EXPORT_PRIVATE QuicOneBlockArena {
   }
 
   // Actual storage.
+#if defined(__CHERI_PURE_CAPABILITY__)
+  alignas(max_align_t) char storage_[ArenaSize];
+#else   // !__CHERI_PURE_CAPABILITY__
   // Subtle/annoying: the value '8' must be coded explicitly into the alignment
   // declaration for MSVC.
   alignas(8) char storage_[ArenaSize];
+#endif  // !__CHERI_PURE_CAPABILITY__
   // Current offset into the storage.
   uint32_t offset_;
 };
