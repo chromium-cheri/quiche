@@ -122,8 +122,13 @@ struct QUIC_EXPORT_PRIVATE QuicFrame {
 
 static_assert(std::is_standard_layout<QuicFrame>::value,
               "QuicFrame must have a standard layout");
+#if defined(__CHERI_PURE_CAPABILITY__)
+static_assert(sizeof(QuicFrame) <= 48,
+              "Frames larger than 48 bytes should be referenced by pointer.");
+#else   // !__CHERI_PURE_CAPABILITY__
 static_assert(sizeof(QuicFrame) <= 24,
               "Frames larger than 24 bytes should be referenced by pointer.");
+#endif  // !__CHERI_PURE_CAPABILITY__
 static_assert(offsetof(QuicStreamFrame, type) == offsetof(QuicFrame, type),
               "Offset of |type| must match in QuicFrame and QuicStreamFrame");
 

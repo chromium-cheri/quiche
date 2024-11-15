@@ -24,8 +24,13 @@ struct QUIC_EXPORT_PRIVATE QuicInlinedFrame {
                   "Inlined frame must have a standard layout");
     static_assert(offsetof(DerivedT, type) == 0,
                   "type must be the first field.");
+#if defined(__CHERI_PURE_CAPABILITY__)
+    static_assert(sizeof(DerivedT) <= 48,
+                  "Frames larger than 48 bytes should not be inlined.");
+#else   // !__CHERI_PURE_CAPABILITY__
     static_assert(sizeof(DerivedT) <= 24,
                   "Frames larger than 24 bytes should not be inlined.");
+#endif  // !__CHERI_PURE_CAPABILITY__
   }
 };
 
