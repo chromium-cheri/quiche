@@ -22,7 +22,11 @@ namespace quic {
 
 template <uint32_t ArenaSize>
 class QUIC_EXPORT_PRIVATE QuicOneBlockArena {
+#if defined(__CHERI_PURE_CAPABILITY__)
+  static const uint32_t kMaxAlign = alignof(max_align_t);
+#else   // !__CHERI_PURE_CAPABILITY__
   static const uint32_t kMaxAlign = 8;
+#endif  // !__CHERI_PURE_CAPABILITY__
 
  public:
   QuicOneBlockArena() : offset_(0) {}
