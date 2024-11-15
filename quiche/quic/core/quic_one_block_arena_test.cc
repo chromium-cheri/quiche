@@ -13,7 +13,11 @@
 namespace quic::test {
 namespace {
 
+#if defined(__CHERI_PURE_CAPABILITY__)
+static const uint32_t kMaxAlign = alignof(max_align_t);
+#else   // !__CHERI_PURE_CAPABILITY__
 static const uint32_t kMaxAlign = 8;
+#endif  // !__CHERI_PURE_CAPABILITY__
 
 struct TestObject {
   uint32_t value;
